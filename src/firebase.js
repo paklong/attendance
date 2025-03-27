@@ -17,14 +17,38 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 export const firebaseSignIn = (auth, email, password) => {
-  signInWithEmailAndPassword(auth, email, password)
+  return signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      console.log(user.email);
+      console.log(`User email: ${user.email}`);
+      return user;
     })
     .catch((error) => {
       const errorCode = error.code;
       const errorMessage = error.message;
-      console.log(`${errorCode}: ${errorMessage}`);
+      console.log(`Error: ${errorCode}: ${errorMessage}`);
+
+      let customMessage;
+      switch (errorCode) {
+        case "auth/invalid-email":
+          customMessage =
+            "The email address is not valid. Please check and try again.";
+          break;
+        case "auth/user-not-found":
+          customMessage = "No account found with this email";
+          break;
+        case "auth/wrong-password":
+          customMessage = "Incorrect password. Please try again.";
+          break;
+        case "auth/too-many-requests":
+          customMessage = "Too many attempts. Please wait a bit and try again.";
+          break;
+        case "auth/user-disabled":
+          customMessage = "This account has been disabled. Contact support.";
+          break;
+        default:
+          customMessage = "An error occurred. Please try again later.";
+      }
+      throw customMessage;
     });
 };
