@@ -7,19 +7,23 @@ import {
   useNavigate,
 } from "react-router-dom";
 import "./App.css";
-import { db, auth, firebaseSignIn } from "./firebase.js";
+import { getUserProfile, auth, firebaseSignIn } from "./firebase.js";
 
 const CurrentUserContext = createContext();
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        setCurrentUser(user.email);
+        setCurrentUser(user);
+        const profile = await getUserProfile(user.uid);
+        setUserProfile(profile);
       } else {
         setCurrentUser("");
+        setUserProfile(null);
       }
     });
     return () => unsubscribe();
@@ -30,7 +34,9 @@ function App() {
   }
 
   return (
-    <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
+    <CurrentUserContext.Provider
+      value={{ currentUser, setCurrentUser, userProfile }}
+    >
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
@@ -65,10 +71,12 @@ function LoginPage() {
 }
 
 function HomePage() {
-  const { currentUser } = useContext(CurrentUserContext);
+  const { currentUser, userProfile } = useContext(CurrentUserContext);
   return (
     <div>
-      <h1>Hi {currentUser}</h1>
+      <h1>Hi {currentUser.email}</h1>
+      <h1>{userProfile?.parentName}</h1>
+      <h1>{JSON.stringify(userProfile)}</h1>
       <button
         onClick={() => {
           auth.signOut();
@@ -146,10 +154,20 @@ function LoginForm() {
     const validation = validateForm();
     if (validation) {
       try {
-        const currentEmail = await firebaseSignIn(auth, email, password);
-        setCurrentUser(currentEmail || "");
-      } catch (errorMessage) {
-        setErrors({ ...errors, email: errorMessage });
+        const user = await firebaseSignIn(auth, email, password);
+        setCurrentUser(user || "");
+      } catch (error) {
+        switch (error.code) {
+          case "auth/invalid-email":
+          case "auth/user-not-found":
+            setErrors({ ...errors, email: error.message });
+            break;
+          case "auth/wrong-password":
+            setErrors({ ...errors, password: error.message });
+            break;
+          default:
+            setErrors({ ...errors });
+        }
       }
     }
   };

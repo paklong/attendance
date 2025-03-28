@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const firebaseConfig = {
@@ -49,6 +49,23 @@ export const firebaseSignIn = (auth, email, password) => {
         default:
           customMessage = "An error occurred. Please try again later.";
       }
-      throw customMessage;
+      throw { code: errorCode, message: customMessage };
     });
+};
+
+export const getUserProfile = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      console.log(userSnap.data());
+      return userSnap.data();
+    } else {
+      console.log("No user found");
+      return null;
+    }
+  } catch (error) {
+    console.log("Error fetching user proflie: ", error);
+    throw error;
+  }
 };
