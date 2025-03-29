@@ -7,7 +7,12 @@ import {
   useNavigate,
 } from "react-router-dom";
 import "./App.css";
-import { getUserProfile, auth, firebaseSignIn } from "./firebase.js";
+import {
+  getUserProfile,
+  auth,
+  firebaseSignIn,
+  getStudentProfile,
+} from "./firebase.js";
 
 const CurrentUserContext = createContext();
 
@@ -72,18 +77,68 @@ function LoginPage() {
 
 function HomePage() {
   const { currentUser, userProfile } = useContext(CurrentUserContext);
+  const [studentProfiles, setStudentProfiles] = useState(null);
+  const studentIds = userProfile?.studentIDs;
+
+  useEffect(() => {
+    if (!studentIds || studentIds.length === 0) {
+      setStudentProfiles([]);
+      return;
+    }
+    const fetchStudentProfiles = async () => {
+      try {
+        const promise = studentIds.map((studentId) => {
+          return getStudentProfile(studentId);
+        });
+        const result = await Promise.all(promise);
+        setStudentProfiles(result);
+      } catch (error) {
+        console.log("Error fetching student profiles:", error);
+        setStudentProfiles([]);
+      }
+    };
+    fetchStudentProfiles();
+    return () => {};
+  }, [studentIds]);
+
   return (
-    <div>
-      <h1>Hi {currentUser.email}</h1>
-      <h1>{userProfile?.parentName}</h1>
-      <h1>{JSON.stringify(userProfile)}</h1>
+    <div className="min-h-screen flex flex-col items-center py-8">
+      <h1 className="text-4xl font-bold text-gray-800 mb-6">
+        Hi, {userProfile?.parentName?.split(" ")[0] || "Parent"}
+      </h1>
+      <div className="w-full max-w-2xl bg-[#f2f2f2] rounded-lg shadow-md p-6">
+        {studentProfiles && studentProfiles.length > 0 ? (
+          studentProfiles.map((student) => (
+            <StudentProfilesCard key={student.studentName} student={student} />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center">
+            No student profiles available.
+          </p>
+        )}
+      </div>
       <button
         onClick={() => {
           auth.signOut();
         }}
+        className="mt-6 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
       >
         Sign Out
       </button>
+    </div>
+  );
+}
+
+function StudentProfilesCard({ student }) {
+  return (
+    <div className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors duration-150">
+      <p className="text-lg font-medium text-gray-700">
+        {student.studentName || "Unknown"}
+      </p>
+      <p className="text-md text-gray-600">
+        {student.remainingClasses ?? "N/A"}{" "}
+        <span className="text-sm text-gray-400">classes left</span>
+      </p>
     </div>
   );
 }
@@ -221,4 +276,5 @@ function LoginForm() {
     </form>
   );
 }
+
 export default App;

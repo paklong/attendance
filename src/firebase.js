@@ -58,14 +58,31 @@ export const getUserProfile = async (userId) => {
     const userRef = doc(db, "users", userId);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      console.log(userSnap.data());
+      console.log("User Profile from firebase.js " + userSnap.data());
       return userSnap.data();
     } else {
-      console.log("No user found");
+      console.log(`No user ${userId} found`);
       return null;
     }
   } catch (error) {
     console.log("Error fetching user proflie: ", error);
+    throw error;
+  }
+};
+
+export const getStudentProfile = async (studentId) => {
+  try {
+    const studentRef = doc(db, "students", studentId);
+    const studentSnap = await getDoc(studentRef);
+    if (studentSnap.exists()) {
+      console.log(`Student ${studentSnap.data().studentName} found`);
+      return studentSnap.data();
+    } else {
+      console.log(`No student ${studentId} found`);
+      return null;
+    }
+  } catch (error) {
+    console.log("Error fetching student profile", error);
     throw error;
   }
 };
