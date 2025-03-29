@@ -7,6 +7,7 @@ import {
   Link,
   Outlet,
   useParams,
+  useLocation,
 } from "react-router-dom";
 import "./App.css";
 import {
@@ -14,6 +15,7 @@ import {
   auth,
   firebaseSignIn,
   getStudentProfile,
+  getAttendance,
 } from "./firebase.js";
 
 const CurrentUserContext = createContext();
@@ -130,24 +132,27 @@ function HomePage() {
           Hi, {userProfile?.parentName?.split(" ")[0] || "Parent"}
         </Link>
       </h1>
-      <div className="w-full max-w-2xl bg-[#f2f2f2] rounded-lg shadow-md p-6">
+      <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
         {studentProfiles && studentProfiles.length > 0 ? (
-          studentProfiles.map((student) => (
-            <StudentProfilesCard
-              key={student.studentName}
-              student={student}
-              isDrawerOpen={openDrawerId === student.studentName}
-              onToggleDrawer={() => {
-                handleToggleDrawer(student.studentName);
-              }}
-            />
-          ))
+          studentProfiles.map((student) => {
+            return (
+              <StudentProfilesCard
+                key={student.studentId}
+                student={student}
+                isDrawerOpen={openDrawerId === student.studentId}
+                onToggleDrawer={() => {
+                  handleToggleDrawer(student.studentId);
+                }}
+              />
+            );
+          })
         ) : (
           <p className="text-gray-500 text-center">
             No student profiles available.
           </p>
         )}
       </div>
+      <Outlet />
       <button
         onClick={() => {
           auth.signOut();
@@ -156,13 +161,12 @@ function HomePage() {
       >
         Sign Out
       </button>
-      <Outlet />
     </div>
   );
 }
 
 function StudentProfilesCard({ student, isDrawerOpen, onToggleDrawer }) {
-  const { studentName, remainingClasses } = student;
+  const { studentId, studentName, remainingClasses } = student;
 
   const handleClick = () => {
     console.log(`${studentName} is clicked`);
@@ -187,6 +191,7 @@ function StudentProfilesCard({ student, isDrawerOpen, onToggleDrawer }) {
               <Link
                 className="cursor-pointer hover:text-blue-500 hovers:underline"
                 to={`student/${studentName}/attendance`}
+                state={{ studentId }}
               >
                 View Attendance
               </Link>
@@ -195,6 +200,7 @@ function StudentProfilesCard({ student, isDrawerOpen, onToggleDrawer }) {
               <Link
                 className="cursor-pointer hover:text-blue-500 hovers:underline"
                 to={`student/${studentName}/portfolio`}
+                state={{ studentId }}
               >
                 View Portfolio
               </Link>
@@ -207,13 +213,96 @@ function StudentProfilesCard({ student, isDrawerOpen, onToggleDrawer }) {
 }
 function AttendancePage() {
   const { studentName } = useParams();
+  const location = useLocation();
+  const studentId = location.state?.studentId || "";
+  const [attendances, setAttendances] = useState([]);
+
+  useEffect(() => {
+    if (!studentId) {
+      setAttendances([]);
+      return;
+    }
+    const fetchAttendance = async () => {
+      try {
+        const results = await getAttendance(studentId, { includeIds: true });
+        setAttendances(results);
+      } catch (error) {
+        console.log("Error fetching student attendance:", error);
+        setAttendances([]);
+      }
+    };
+    fetchAttendance();
+    return () => {};
+  }, [studentId]);
+
+  // Format Firestore timestamp to readable date
+  const formatDate = (timestamp) => {
+    if (!timestamp || !timestamp.seconds) return "N/A";
+    const date = new Date(
+      timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000,
+    );
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
-    <div className="mt-4 p-4 bg-white rounded-lg shadow-md max-w-2xl">
-      <h2 className="text-2xl font-bold">Attendance for {studentName}</h2>
+    <div className="mt-4 p-6 bg-white rounded-lg shadow-md max-w-2xl mx-auto">
+      <h2 className="text-center text-2xl font-bold text-gray-800 mb-4">
+        Attendance for {studentName}
+      </h2>
+      {attendances.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="p-3 text-sm font-semibold text-gray-600">
+                  Date
+                </th>
+                <th className="p-3 text-sm font-semibold text-gray-600">
+                  Class
+                </th>
+                <th className="p-3 text-sm font-semibold text-gray-600">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendances.map((record) => (
+                <tr
+                  key={record.id}
+                  className="border-b border-gray-200 hover:bg-gray-50"
+                >
+                  <td className="p-3 text-gray-700">
+                    {formatDate(record.attendanceDate)}
+                  </td>
+                  <td className="p-3 text-gray-700">{record.className}</td>
+                  <td className="p-3">
+                    <span
+                      className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                        record.attendance
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {record.attendance ? "Present" : "Absent"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-gray-500 text-center">
+          No attendance records found for {studentName}.
+        </p>
+      )}
     </div>
   );
 }
-
 function PortfolioPage() {
   const { studentName } = useParams();
   return (

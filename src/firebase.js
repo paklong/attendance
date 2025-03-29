@@ -1,5 +1,15 @@
 import { initializeApp } from "firebase/app";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const firebaseConfig = {
@@ -76,13 +86,37 @@ export const getStudentProfile = async (studentId) => {
     const studentSnap = await getDoc(studentRef);
     if (studentSnap.exists()) {
       console.log(`Student ${studentSnap.data().studentName} found`);
-      return studentSnap.data();
+      return { ...studentSnap.data(), studentId };
     } else {
       console.log(`No student ${studentId} found`);
       return null;
     }
   } catch (error) {
     console.log("Error fetching student profile", error);
+    throw error;
+  }
+};
+
+export const getAttendance = async (studentId) => {
+  const limitResult = 10;
+
+  try {
+    if (!studentId) {
+      throw new Error("studentId required");
+    }
+
+    const q = query(
+      collection(db, "attendance"),
+      where("studentId", "==", studentId),
+      limit(limitResult),
+    );
+    const querySnap = await getDocs(q);
+    const results = querySnap.docs.map((doc) => {
+      return { id: doc.id, ...doc.data() };
+    });
+    return results;
+  } catch (error) {
+    console.log("Error fetching student attendance", error);
     throw error;
   }
 };
