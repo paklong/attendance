@@ -4,7 +4,9 @@ import {
   Routes,
   Route,
   Navigate,
-  useNavigate,
+  Link,
+  Outlet,
+  useParams,
 } from "react-router-dom";
 import "./App.css";
 import {
@@ -56,7 +58,16 @@ function App() {
             element={
               currentUser !== "" ? <HomePage /> : <Navigate to="/login" />
             }
-          />
+          >
+            <Route
+              path="student/:studentName/attendance"
+              element={<AttendancePage />}
+            />
+            <Route
+              path="student/:studentName/portfolio"
+              element={<PortfolioPage />}
+            />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
@@ -78,7 +89,14 @@ function LoginPage() {
 function HomePage() {
   const { currentUser, userProfile } = useContext(CurrentUserContext);
   const [studentProfiles, setStudentProfiles] = useState(null);
+  const [openDrawerId, setOpenDrawerId] = useState(null);
   const studentIds = userProfile?.studentIDs;
+  const handleToggleDrawer = (student) => {
+    setOpenDrawerId((prev) => (student === prev ? null : student));
+  };
+  const handleHomeLinkClick = () => {
+    setOpenDrawerId(null);
+  };
 
   useEffect(() => {
     if (!studentIds || studentIds.length === 0) {
@@ -104,12 +122,25 @@ function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center py-8">
       <h1 className="text-4xl font-bold text-gray-800 mb-6">
-        Hi, {userProfile?.parentName?.split(" ")[0] || "Parent"}
+        <Link
+          to="/home"
+          onClick={handleHomeLinkClick}
+          className="hover:text-blue-500"
+        >
+          Hi, {userProfile?.parentName?.split(" ")[0] || "Parent"}
+        </Link>
       </h1>
       <div className="w-full max-w-2xl bg-[#f2f2f2] rounded-lg shadow-md p-6">
         {studentProfiles && studentProfiles.length > 0 ? (
           studentProfiles.map((student) => (
-            <StudentProfilesCard key={student.studentName} student={student} />
+            <StudentProfilesCard
+              key={student.studentName}
+              student={student}
+              isDrawerOpen={openDrawerId === student.studentName}
+              onToggleDrawer={() => {
+                handleToggleDrawer(student.studentName);
+              }}
+            />
           ))
         ) : (
           <p className="text-gray-500 text-center">
@@ -125,27 +156,73 @@ function HomePage() {
       >
         Sign Out
       </button>
+      <Outlet />
     </div>
   );
 }
 
-function StudentProfilesCard({ student }) {
+function StudentProfilesCard({ student, isDrawerOpen, onToggleDrawer }) {
+  const { studentName, remainingClasses } = student;
+
+  const handleClick = () => {
+    console.log(`${studentName} is clicked`);
+    onToggleDrawer();
+  };
+
   return (
-    <div className="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors duration-150">
-      <p className="text-lg font-medium text-gray-700">
-        {student.studentName || "Unknown"}
-      </p>
-      <p className="text-md text-gray-600">
-        {student.remainingClasses ?? "N/A"}{" "}
-        <span className="text-sm text-gray-400">classes left</span>
-      </p>
+    <div className="flex flex-col p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
+      <div className="flex justify-between items-center" onClick={handleClick}>
+        <p className="text-lg font-medium text-gray-700">
+          {studentName || "Unknown"}
+        </p>
+        <p className="text-md text-gray-600">
+          {remainingClasses ?? "N/A"}{" "}
+          <span className="text-sm text-gray-400">classes left</span>
+        </p>
+      </div>
+      {isDrawerOpen && (
+        <div className="p-1 bg-gray-100 rounded-lg text-xs">
+          <ul className="space-y-1">
+            <li>
+              <Link
+                className="cursor-pointer hover:text-blue-500 hovers:underline"
+                to={`student/${studentName}/attendance`}
+              >
+                View Attendance
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="cursor-pointer hover:text-blue-500 hovers:underline"
+                to={`student/${studentName}/portfolio`}
+              >
+                View Portfolio
+              </Link>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+function AttendancePage() {
+  const { studentName } = useParams();
+  return (
+    <div className="mt-4 p-4 bg-white rounded-lg shadow-md max-w-2xl">
+      <h2 className="text-2xl font-bold">Attendance for {studentName}</h2>
     </div>
   );
 }
 
+function PortfolioPage() {
+  const { studentName } = useParams();
+  return (
+    <div className="mt-4 p-4 bg-white rounded-lg shadow-md max-w-2xl">
+      <h2 className="text-2xl font-bold">Portfolio for {studentName}</h2>
+    </div>
+  );
+}
 function NotFoundPage() {
-  const navigate = useNavigate();
-
   return (
     <div className="h-screen flex flex-col items-center justify-center">
       <div className="border-2 border-gray-500 rounded-lg flex flex-col items-center gap-5 p-5">
@@ -155,12 +232,12 @@ function NotFoundPage() {
         <p className="text-lg text-gray-700">
           Sorry, the page you’re looking for doesn’t exist.
         </p>
-        <button
+        <Link
           className="text-blue-500 cursor-pointer hover:underline"
-          onClick={() => navigate("/login")}
+          to="/login"
         >
           Go to Login
-        </button>
+        </Link>
       </div>
     </div>
   );
