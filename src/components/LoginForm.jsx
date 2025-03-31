@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { auth, firebaseSignIn } from "../firebase";
+import { auth, firebaseSignIn } from "../utils/firebase";
 import CurrentUserContext from "../context/CurrentUserContext";
 
 export default function LoginForm() {
@@ -38,7 +38,11 @@ export default function LoginForm() {
     if (validation) {
       try {
         const user = await firebaseSignIn(auth, email, password);
-        setCurrentUser(user || "");
+        if (email === import.meta.env.VITE_admin_email) {
+          setCurrentUser({ ...user, isAdmin: true });
+        } else {
+          setCurrentUser(user || "");
+        }
       } catch (error) {
         switch (error.code) {
           case "auth/invalid-email":

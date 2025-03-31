@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { auth, getUserProfile } from "../firebase.js";
+import { auth, getUserProfile } from "../utils/firebase";
 
 export default function useAuth() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -12,7 +12,11 @@ export default function useAuth() {
         try {
           const profile = await getUserProfile(user.uid);
           setUserProfile(profile);
-          setCurrentUser(user);
+          if (user.email === import.meta.env.VITE_admin_email) {
+            setCurrentUser({ ...user, isAdmin: true });
+          } else {
+            setCurrentUser(user);
+          }
         } catch (error) {
           console.error("Error fetching user profile:", error);
           setCurrentUser(null);

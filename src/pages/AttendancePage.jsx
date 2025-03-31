@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { getAttendance } from "../firebase";
+import { getAttendance } from "../utils/firebase";
+import formatDate from "../utils/formatDate";
 
 export default function AttendancePage() {
   const { studentName } = useParams();
   const location = useLocation();
-  const studentId = location.state?.studentId || "";
+  const studentId = location.state?.studentId || ""; // Passed something that is not paras (url)
   const [attendances, setAttendances] = useState([]);
 
   useEffect(() => {
@@ -25,19 +26,6 @@ export default function AttendancePage() {
     fetchAttendance();
     return () => {};
   }, [studentId]);
-
-  // Format Firestore timestamp to readable date
-  const formatDate = (timestamp) => {
-    if (!timestamp || !timestamp.seconds) return "N/A";
-    const date = new Date(
-      timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000,
-    );
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="mt-4 p-6 bg-white rounded-lg shadow-md max-w-2xl mx-auto">

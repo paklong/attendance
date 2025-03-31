@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import CurrentUserContext from "../context/CurrentUserContext";
-import { auth, getStudentProfile } from "../firebase";
+import { auth, getStudentProfile } from "../utils/firebase";
 import StudentProfilesCard from "../components/StudentProfilesCard";
 import { Link, Outlet } from "react-router-dom";
 
