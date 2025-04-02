@@ -5,8 +5,6 @@ import {
   getAllParents,
   getAllAttendances,
 } from "../utils/firebase";
-import formatDate from "../utils/formatDate";
-import AdminStudentView from "../components/AdminStudentsView";
 import { Link, Outlet } from "react-router-dom";
 
 export default function AdminPage() {
@@ -51,14 +49,60 @@ export default function AdminPage() {
     fetchData("attendances", getAllAttendances);
   }, []);
 
+  const isLoading = Object.values(loading).some((status) => status);
+  const hasErrors = Object.values(errors).some((error) => error !== null);
+
   return (
-    <div>
-      <h1>Hi Admin</h1>
-      <button onClick={() => auth.signOut()}>Sign out</button>
-      <Link to="students" state={{ data }}>
-        Student View
-      </Link>
-      <Outlet />
+    <div className="container mx-auto p-6">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-6">
+        <Link to="/admin">
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+        </Link>
+        <button
+          onClick={() => auth.signOut()}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          Sign Out
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="mb-6 space-x-4">
+        <Link
+          to="students"
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Student View
+        </Link>
+        <Link
+          to="attendances"
+          className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          Attendance View
+        </Link>
+      </nav>
+
+      {/* Loading/Error States */}
+      {isLoading ? (
+        <div className="text-center py-4">
+          <p className="text-gray-600">Loading data...</p>
+          <div className="inline-block w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : hasErrors ? (
+        <div className="text-center py-4">
+          <p className="text-red-600 font-semibold">Error loading data:</p>
+          <ul className="text-red-600">
+            {Object.entries(errors)
+              .filter(([, error]) => error)
+              .map(([key, error]) => (
+                <li key={key}>{error}</li>
+              ))}
+          </ul>
+        </div>
+      ) : (
+        <Outlet context={data} />
+      )}
     </div>
   );
 }

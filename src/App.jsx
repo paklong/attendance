@@ -9,6 +9,7 @@ import useAuth from "./components/useAuth.jsx"; // Assuming this is the correct 
 import CurrentUserContext from "./context/CurrentUserContext.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import AdminStudentView from "./components/AdminStudentsView.jsx";
+import AttendanceView from "./components/AdminAttendanceView.jsx";
 
 function App() {
   const { currentUser, setCurrentUser, userProfile, loading } = useAuth();
@@ -50,6 +51,7 @@ function App() {
             }
           >
             <Route path="students" element={<AdminStudentView />} />
+            <Route path="attendances" element={<AttendanceView />} />
           </Route>
 
           {/* /home: Only for authenticated non-admins (or all authenticated users if nested routes apply) */}

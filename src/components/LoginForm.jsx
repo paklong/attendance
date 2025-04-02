@@ -71,9 +71,9 @@ export default function LoginForm() {
             id="username"
             type="text"
             autoComplete="username"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
           {errors.email && (
             <span className="text-red-500 text-xs">{errors.email}</span>
