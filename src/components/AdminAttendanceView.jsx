@@ -8,8 +8,8 @@ const INPUT_CLASSES =
 const TABLE_CLASSES =
   "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
 const TH_CLASSES =
-  "px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-400";
-const TD_CLASSES = "px-6 py-4 text-gray-800 border-b border-gray-200";
+  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
+const TD_CLASSES = "px-6 py-4 text-gray-800 border-b border-gray-200 text-xs";
 const SUGGESTION_CLASSES =
   "px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150";
 
@@ -102,13 +102,8 @@ export default function AttendanceView() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">
-            All Student Attendance
+            Student Attendance
           </h2>
-          {(searchTerm || selectedDate) && (
-            <p className="text-gray-600 mt-1">
-              Total Students Displayed: {attendanceData.length}
-            </p>
-          )}
         </div>
       </div>
 
@@ -158,6 +153,11 @@ export default function AttendanceView() {
         </div>
       </div>
 
+      {(searchTerm || selectedDate) && (
+        <p className="text-gray-600 mt-1">
+          Total Students Displayed: {attendanceData.length}
+        </p>
+      )}
       {/* Attendance Table or Empty State */}
       {attendanceData.length > 0 ? (
         <div className="overflow-x-auto rounded-lg">

@@ -52,47 +52,66 @@ export default function AdminPage() {
   const isLoading = Object.values(loading).some((status) => status);
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
+  // Reusable Tailwind className constants
+  const containerStyles = "container mx-auto p-4";
+  const headerStyles = "flex items-center justify-between mb-4";
+  const titleStyles = "text-xl font-bold text-gray-800";
+  const buttonBaseStyles =
+    "px-3 py-1 text-xs text-white rounded-md transition duration-150 focus:outline-none focus:ring-2 flex justify-center items-center";
+  const signOutButtonStyles = `${buttonBaseStyles} bg-red-600 hover:bg-red-700 focus:ring-red-500`;
+  const navButtonStyles = `${buttonBaseStyles} bg-gray-600 hover:bg-gray-700 focus:ring-gray-500`;
+  const navButtonStylesEdit = `${buttonBaseStyles} bg-blue-600 hover:bg-blue-700 focus:ring-blue-500`;
+  const navStyles = "mb-4 flex space-x-2";
+  const loadingContainerStyles = "text-center py-4";
+  const loadingTextStyles = "text-gray-600 text-sm";
+  const spinnerStyles =
+    "inline-block w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin";
+  const errorTextStyles = "text-red-600 text-sm";
+  const errorHeaderStyles = "text-red-600 font-semibold text-sm";
+
   return (
-    <div className="container mx-auto p-6">
+    <div className={containerStyles}>
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={headerStyles}>
         <Link to="/admin">
-          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <h1 className={titleStyles}>Admin Dashboard</h1>
         </Link>
-        <button
-          onClick={() => auth.signOut()}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
+        <button onClick={() => auth.signOut()} className={signOutButtonStyles}>
           Sign Out
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="mb-6 space-x-4">
-        <Link
-          to="students"
-          className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Student View
+      <nav className={navStyles}>
+        <Link to="students" className={navButtonStyles}>
+          Students
         </Link>
-        <Link
-          to="attendances"
-          className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          Attendance View
+        <Link to="attendances" className={navButtonStyles}>
+          Attendance
+        </Link>
+      </nav>
+      <nav className={navStyles}>
+        <Link to="newParent" className={navButtonStylesEdit}>
+          New Parent
+        </Link>
+        <Link to="newStudent" className={navButtonStylesEdit}>
+          New Student
+        </Link>
+        <Link to="addAttendance" className={navButtonStylesEdit}>
+          Add Attendance
         </Link>
       </nav>
 
       {/* Loading/Error States */}
       {isLoading ? (
-        <div className="text-center py-4">
-          <p className="text-gray-600">Loading data...</p>
-          <div className="inline-block w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className={loadingContainerStyles}>
+          <p className={loadingTextStyles}>Loading data...</p>
+          <div className={spinnerStyles}></div>
         </div>
       ) : hasErrors ? (
-        <div className="text-center py-4">
-          <p className="text-red-600 font-semibold">Error loading data:</p>
-          <ul className="text-red-600">
+        <div className={loadingContainerStyles}>
+          <p className={errorHeaderStyles}>Error loading data:</p>
+          <ul className={errorTextStyles}>
             {Object.entries(errors)
               .filter(([, error]) => error)
               .map(([key, error]) => (

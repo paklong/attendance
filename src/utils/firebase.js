@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import {
+  arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -8,9 +10,16 @@ import {
   limit,
   orderBy,
   query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_apiKey,
@@ -137,4 +146,179 @@ export const getAllAttendances = async () => {
     return { id: doc.id, ...doc.data() };
   });
   return results;
+};
+
+// 1. Create New Parent (with Firebase Auth)
+export const createNewParent = async (
+  email,
+  password,
+  parentName,
+  studentIDs = [],
+) => {
+  try {
+    // Create a new user in Firebase Auth
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password,
+    );
+    const user = userCredential.user;
+    const userId = user.uid; // Use the auth UID as the document ID
+
+    // Create the corresponding parent document in Firestore
+    const userRef = doc(db, "users", userId);
+    const parentData = {
+      email,
+      parentName,
+      studentIDs, // Array of student IDs (optional)
+      lastModifiedTime: serverTimestamp(),
+      isActive: true,
+    };
+
+    await setDoc(userRef, parentData);
+    return { id: userId, ...parentData };
+  } catch (error) {
+    const errorCode = error.code;
+    let customMessage;
+    switch (errorCode) {
+      case "auth/email-already-in-use":
+        customMessage = "This email is already registered.";
+        break;
+      case "auth/invalid-email":
+        customMessage = "The email address is not valid.";
+        break;
+      case "auth/weak-password":
+        customMessage = "The password is too weak. Use at least 6 characters.";
+        break;
+      default:
+        customMessage = "Failed to create parent: " + error.message;
+    }
+    throw new Error(customMessage);
+  }
+};
+// 2. Create New Student
+export const createNewStudent = async (
+  studentId,
+  studentName,
+  parentIds = [],
+  remainingClasses = 0,
+) => {
+  const studentRef = doc(db, "students", studentId);
+  const studentData = {
+    studentName,
+    parentId: parentIds, // Array of parent IDs
+    remainingClasses,
+    lastModifiedTime: serverTimestamp(),
+    isActive: true,
+  };
+
+  try {
+    // Create the student document
+    await setDoc(studentRef, studentData);
+
+    // Update each parent's studentIDs array
+    for (const parentId of parentIds) {
+      const parentRef = doc(db, "users", parentId);
+      await updateDoc(parentRef, {
+        studentIDs: arrayUnion(studentId),
+        lastModifiedTime: serverTimestamp(),
+      });
+    }
+
+    return { id: studentId, ...studentData };
+  } catch (error) {
+    throw new Error(`Failed to create student: ${error.message}`);
+  }
+};
+
+// 3. Create New Attendance
+export const createNewAttendance = async (
+  studentId,
+  parentId,
+  className,
+  attendance,
+) => {
+  const attendanceRef = doc(collection(db, "attendance")); // Auto-generate ID
+  const attendanceData = {
+    studentId,
+    parentId,
+    className,
+    attendance,
+    attendanceDate: serverTimestamp(),
+  };
+
+  try {
+    await setDoc(attendanceRef, attendanceData);
+    return { id: attendanceRef.id, ...attendanceData };
+  } catch (error) {
+    throw new Error(`Failed to create attendance: ${error.message}`);
+  }
+};
+
+// 4. Update Parent
+export const updateParent = async (userId, updates) => {
+  const userRef = doc(db, "users", userId);
+  const updatedData = {
+    ...updates,
+    lastModifiedTime: serverTimestamp(),
+  };
+
+  try {
+    await updateDoc(userRef, updatedData);
+    const updatedDoc = await getDoc(userRef);
+    if (updatedDoc.exists()) {
+      return { id: userId, ...updatedDoc.data() };
+    }
+    throw new Error("Parent not found after update");
+  } catch (error) {
+    throw new Error(`Failed to update parent: ${error.message}`);
+  }
+};
+
+// 5. Update Student
+export const updateStudent = async (studentId, updates) => {
+  const studentRef = doc(db, "students", studentId);
+  const updatedData = {
+    ...updates,
+    lastModifiedTime: serverTimestamp(),
+  };
+
+  try {
+    await updateDoc(studentRef, updatedData);
+    const updatedDoc = await getDoc(studentRef);
+    if (updatedDoc.exists()) {
+      return { id: studentId, ...updatedDoc.data() };
+    }
+    throw new Error("Student not found after update");
+  } catch (error) {
+    throw new Error(`Failed to update student: ${error.message}`);
+  }
+};
+
+// 6. Update Attendance
+export const updateAttendance = async (attendanceId, updates) => {
+  const attendanceRef = doc(db, "attendance", attendanceId);
+
+  try {
+    await updateDoc(attendanceRef, updates);
+    const updatedDoc = await getDoc(attendanceRef);
+    if (updatedDoc.exists()) {
+      return { id: attendanceId, ...updatedDoc.data() };
+    }
+    throw new Error("Attendance not found after update");
+  } catch (error) {
+    throw new Error(`Failed to update attendance: ${error.message}`);
+  }
+};
+
+// 7. Delete Attendance
+export const deleteAttendance = async (attendanceId) => {
+  const attendanceRef = doc(db, "attendance", attendanceId);
+
+  try {
+    await deleteDoc(attendanceRef);
+    return { id: attendanceId, success: true };
+  } catch (error) {
+    throw new Error(`Failed to delete attendance: ${error.message}`);
+  }
 };

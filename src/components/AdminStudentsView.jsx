@@ -8,7 +8,7 @@ const INPUT_CLASSES =
 const TABLE_CLASSES =
   "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
 const TH_CLASSES =
-  "px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-400";
+  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
 const TD_CLASSES = "px-6 py-4 text-xs text-gray-800 border-b border-gray-200";
 const SUGGESTION_CLASSES =
   "px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150";
