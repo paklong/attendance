@@ -36,6 +36,9 @@ const limitResult = 20;
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
+const adminApp = initializeApp(firebaseConfig, "adminApp");
+const adminAuth = getAuth(adminApp);
+
 export const firebaseSignIn = (auth, email, password) => {
   return signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
@@ -149,28 +152,23 @@ export const getAllAttendances = async () => {
 };
 
 // 1. Create New Parent (with Firebase Auth)
-export const createNewParent = async (
-  email,
-  password,
-  parentName,
-  studentIDs = [],
-) => {
+export const createNewParent = async (email, password, parentName) => {
   try {
-    // Create a new user in Firebase Auth
+    // Create a new user in Firebase Auth using the secondary app
     const userCredential = await createUserWithEmailAndPassword(
-      auth,
+      adminAuth,
       email,
       password,
     );
     const user = userCredential.user;
     const userId = user.uid; // Use the auth UID as the document ID
 
-    // Create the corresponding parent document in Firestore
+    // Create the corresponding parent document in Firestore (using primary app's db)
     const userRef = doc(db, "users", userId);
     const parentData = {
       email,
       parentName,
-      studentIDs, // Array of student IDs (optional)
+      studentIDs: [], // Initialize as empty array
       lastModifiedTime: serverTimestamp(),
       isActive: true,
     };
@@ -196,6 +194,7 @@ export const createNewParent = async (
     throw new Error(customMessage);
   }
 };
+
 // 2. Create New Student
 export const createNewStudent = async (
   studentId,

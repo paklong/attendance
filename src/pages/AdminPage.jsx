@@ -91,13 +91,13 @@ export default function AdminPage() {
         </Link>
       </nav>
       <nav className={navStyles}>
-        <Link to="newParent" className={navButtonStylesEdit}>
+        <Link to="new-parent" className={navButtonStylesEdit}>
           New Parent
         </Link>
-        <Link to="newStudent" className={navButtonStylesEdit}>
+        <Link to="new-student" className={navButtonStylesEdit}>
           New Student
         </Link>
-        <Link to="addAttendance" className={navButtonStylesEdit}>
+        <Link to="add-attendance" className={navButtonStylesEdit}>
           Add Attendance
         </Link>
       </nav>

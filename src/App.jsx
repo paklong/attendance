@@ -5,11 +5,12 @@ import HomePage from "./pages/HomePage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
 import PortfolioPage from "./pages/PortfolioPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
-import useAuth from "./components/useAuth.jsx"; // Assuming this is the correct path
+import useAuth from "./components/useAuth.jsx";
 import CurrentUserContext from "./context/CurrentUserContext.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
 import AdminStudentView from "./components/AdminStudentsView.jsx";
 import AttendanceView from "./components/AdminAttendanceView.jsx";
+import NewParentView from "./components/NewParentView.jsx";
 
 function App() {
   const { currentUser, setCurrentUser, userProfile, loading } = useAuth();
@@ -52,9 +53,11 @@ function App() {
           >
             <Route path="students" element={<AdminStudentView />} />
             <Route path="attendances" element={<AttendanceView />} />
-            <Route path="new" element={<NewParentView />} />
-            <Route path="newStudent" element={<NewStudentView />} />
-            <Route path="addAttendance" element={<AddAttendanceView />} />
+            <Route path="new-parent" element={<NewParentView />} />
+            {/*      
+            <Route path="new-student" element={<NewStudentView />} />
+            <Route path="add-attendance" element={<AddAttendanceView />} />
+            */}
           </Route>
 
           {/* /home: Only for authenticated non-admins (or all authenticated users if nested routes apply) */}
