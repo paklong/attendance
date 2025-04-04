@@ -6,6 +6,20 @@ import {
   getAllAttendances,
 } from "../utils/firebase";
 import { Link, Outlet } from "react-router-dom";
+import {
+  adminContainerStyles,
+  headerStyles,
+  titleStyles,
+  signOutButtonStyles,
+  navStyles,
+  navButtonStyles,
+  navButtonStylesEdit,
+  loadingContainerStyles,
+  loadingTextStyles,
+  spinnerStyles,
+  errorHeaderStyles,
+  errorTextStyles,
+} from "../utils/styles";
 
 export default function AdminPage() {
   const [data, setData] = useState({
@@ -52,25 +66,8 @@ export default function AdminPage() {
   const isLoading = Object.values(loading).some((status) => status);
   const hasErrors = Object.values(errors).some((error) => error !== null);
 
-  // Reusable Tailwind className constants
-  const containerStyles = "container mx-auto p-4";
-  const headerStyles = "flex items-center justify-between mb-4";
-  const titleStyles = "text-xl font-bold text-gray-800";
-  const buttonBaseStyles =
-    "px-3 py-1 text-xs text-white rounded-md transition duration-150 focus:outline-none focus:ring-2 flex justify-center items-center";
-  const signOutButtonStyles = `${buttonBaseStyles} bg-red-600 hover:bg-red-700 focus:ring-red-500`;
-  const navButtonStyles = `${buttonBaseStyles} bg-gray-600 hover:bg-gray-700 focus:ring-gray-500`;
-  const navButtonStylesEdit = `${buttonBaseStyles} bg-blue-600 hover:bg-blue-700 focus:ring-blue-500`;
-  const navStyles = "mb-4 flex space-x-2";
-  const loadingContainerStyles = "text-center py-4";
-  const loadingTextStyles = "text-gray-600 text-sm";
-  const spinnerStyles =
-    "inline-block w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin";
-  const errorTextStyles = "text-red-600 text-sm";
-  const errorHeaderStyles = "text-red-600 font-semibold text-sm";
-
   return (
-    <div className={containerStyles}>
+    <div className={adminContainerStyles}>
       {/* Header Section */}
       <div className={headerStyles}>
         <Link to="/admin">
@@ -120,7 +117,7 @@ export default function AdminPage() {
           </ul>
         </div>
       ) : (
-        <Outlet context={data} />
+        <Outlet context={{ data, fetchData }} />
       )}
     </div>
   );

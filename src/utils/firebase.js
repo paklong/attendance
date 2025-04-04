@@ -31,7 +31,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const limitResult = 20;
+const limitResult = 2000;
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
@@ -196,34 +196,37 @@ export const createNewParent = async (email, password, parentName) => {
 };
 
 // 2. Create New Student
+// New function to generate student ID
+export const generateStudentId = () => {
+  const studentRef = doc(collection(db, "students"));
+  return studentRef.id;
+};
+
 export const createNewStudent = async (
   studentId,
   studentName,
-  parentIds = [],
+  parentId = "",
   remainingClasses = 0,
 ) => {
   const studentRef = doc(db, "students", studentId);
   const studentData = {
     studentName,
-    parentId: parentIds, // Array of parent IDs
+    parentId, // Single string, not an array
     remainingClasses,
     lastModifiedTime: serverTimestamp(),
     isActive: true,
   };
 
   try {
-    // Create the student document
     await setDoc(studentRef, studentData);
-
-    // Update each parent's studentIDs array
-    for (const parentId of parentIds) {
+    if (parentId) {
+      // Only update parent if a parentId is provided
       const parentRef = doc(db, "users", parentId);
       await updateDoc(parentRef, {
         studentIDs: arrayUnion(studentId),
         lastModifiedTime: serverTimestamp(),
       });
     }
-
     return { id: studentId, ...studentData };
   } catch (error) {
     throw new Error(`Failed to create student: ${error.message}`);
@@ -237,7 +240,7 @@ export const createNewAttendance = async (
   className,
   attendance,
 ) => {
-  const attendanceRef = doc(collection(db, "attendance")); // Auto-generate ID
+  const attendanceRef = doc(collection(db, "attendance"));
   const attendanceData = {
     studentId,
     parentId,

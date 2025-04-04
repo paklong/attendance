@@ -14,7 +14,7 @@ const SUGGESTION_CLASSES =
   "px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150";
 
 export default function AdminStudentView() {
-  const data = useOutletContext();
+  const { data } = useOutletContext();
   const { students = [], parents = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
