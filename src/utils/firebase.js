@@ -239,6 +239,7 @@ export const createNewAttendance = async (
   parentId,
   className,
   attendance,
+  attendanceDate,
 ) => {
   const attendanceRef = doc(collection(db, "attendance"));
   const attendanceData = {
@@ -246,7 +247,7 @@ export const createNewAttendance = async (
     parentId,
     className,
     attendance,
-    attendanceDate: serverTimestamp(),
+    attendanceDate,
   };
 
   try {

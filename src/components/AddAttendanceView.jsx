@@ -17,12 +17,16 @@ import {
   successStyles,
   loadingTextStyles,
 } from "../utils/styles";
+import { Timestamp } from "firebase/firestore";
 
 export default function AddAttendanceView() {
   const [formData, setFormData] = useState({
     studentId: "",
+    studnentName: "",
     className: "Traditional Art Class",
     attendance: "true",
+    attendanceDate: new Date().toISOString().split("T")[0],
+    attendanceTime: "10:00 AM",
   });
   const [students, setStudents] = useState([]);
   const [parents, setParents] = useState([]);
@@ -91,24 +95,12 @@ export default function AddAttendanceView() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
   const handleStudentSelect = (studentId) => {
     setFormData((prev) => ({ ...prev, studentId }));
-    setSearchQuery("");
+    const studentName = students.find((s) => s.id === studentId)?.studentName;
+    setSearchQuery(studentName);
     setFilteredStudents(students);
     setIsSearchFocused(false); // Hide suggestions after selection
-  };
-
-  const handleFocus = () => {
-    setIsSearchFocused(true);
-  };
-
-  const handleBlur = () => {
-    // Delay blur to allow click on suggestion
-    setTimeout(() => setIsSearchFocused(false), 200);
   };
 
   const handleSubmit = async (e) => {
@@ -122,11 +114,15 @@ export default function AddAttendanceView() {
       const selectedStudent = students.find((s) => s.id === formData.studentId);
       if (!selectedStudent) throw new Error("Please select a student");
 
+      const attendaceDateTime = new Date(
+        `${formData.attendanceDate}T${formData.attendanceTime}`,
+      );
       const attendanceData = await createNewAttendance(
         formData.studentId,
         selectedStudent.parentId || "",
         formData.className,
         formData.attendance === "true",
+        Timestamp.fromDate(attendaceDateTime),
       );
       setSuccess(
         `Attendance recorded for "${selectedStudent.studentName}" in "${formData.className}"`,
@@ -139,7 +135,6 @@ export default function AddAttendanceView() {
       setTimeout(() => setFormDisabled(false), 3000);
     }
   };
-
   return (
     <div className={containerStyles}>
       <h2 className={h2Styles}>Add Attendance</h2>
@@ -157,12 +152,15 @@ export default function AddAttendanceView() {
               type="text"
               id="studentSearch"
               value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => {
+                setTimeout(() => setIsSearchFocused(false), 200);
+              }}
               className={inputStyles(formDisabled)}
               disabled={formDisabled}
               placeholder="Type to search students..."
+              spellCheck="false"
             />
             {isSearchFocused && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
@@ -182,12 +180,6 @@ export default function AddAttendanceView() {
                   </div>
                 )}
               </div>
-            )}
-            {formData.studentId && (
-              <p className="text-sm text-gray-600 mt-1">
-                Selected:{" "}
-                {students.find((s) => s.id === formData.studentId)?.studentName}
-              </p>
             )}
           </div>
 
@@ -241,6 +233,42 @@ export default function AddAttendanceView() {
             >
               <option value="true">Present</option>
               <option value="false">Absent</option>
+            </select>
+          </div>
+
+          {/* Attendance Date*/}
+          <div>
+            <label htmlFor="attendanceDate" className={labelStyles}>
+              Attendance Date
+            </label>
+            <input
+              id="attendanceDate"
+              name="attendanceDate"
+              type="date"
+              value={formData.attendanceDate}
+              onChange={handleChange}
+              className={selectStyles}
+              disabled={formDisabled}
+            />
+          </div>
+
+          {/* Attendance Time */}
+          <div>
+            <label htmlFor="attendanceTime" className={labelStyles}>
+              Attendance Time
+            </label>
+            <select
+              id="attendanceTime"
+              name="attendanceTime"
+              value={formData.attendanceTime}
+              onChange={handleChange}
+              className={selectStyles}
+              disabled={formDisabled}
+            >
+              <option value="10:00">10:00 AM</option>
+              <option value="11:30">11:30 AM</option>
+              <option value="14:00">02:00 PM</option>
+              <option value="15:30">03:30 PM</option>
             </select>
           </div>
 
