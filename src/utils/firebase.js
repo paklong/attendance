@@ -31,7 +31,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const limitResult = 2000;
+const limitResult = 1000;
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
