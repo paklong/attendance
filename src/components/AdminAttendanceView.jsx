@@ -1,82 +1,71 @@
 import { useState, useMemo } from "react";
-import { useOutletContext, Link } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
+import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
 
 // Reusable style constants
 const INPUT_CLASSES =
   "w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200";
-const TABLE_CLASSES =
-  "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
-const TH_CLASSES =
-  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
-const TD_CLASSES = "px-6 py-4 text-gray-800 border-b border-gray-200 text-xs";
-const SUGGESTION_CLASSES =
-  "px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150";
 
 export default function AttendanceView() {
   const { data } = useOutletContext();
   const { students = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(""); // Date filter (e.g., "2025-03-31")
 
-  // Handle search input and suggestions
+  // Handle search input
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-
-    if (value.length > 0) {
-      const filteredSuggestions = students
-        .filter((student) =>
-          student.studentName.toLowerCase().includes(value.toLowerCase()),
-        )
-        .map((student) => student.studentName)
-        .slice(0, 5);
-      setSuggestions(filteredSuggestions);
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion);
-    setSuggestions([]);
   };
 
   // Memoized attendance summary for all students
   const attendanceData = useMemo(() => {
+    // Get all attendances for this student, sorted by date (most recent first)
     let filteredData = students.map((student) => {
-      const studentAttendances = attendances
-        .filter((att) => att.studentId === student.id)
-        .sort(
-          (a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate),
-        );
-      const lastAttendance = studentAttendances[0];
-      const totalAttendances = studentAttendances.length;
+      const studentAttendances = attendances.filter(
+        (att) => att.studentId === student.id,
+      );
+
+      if (studentAttendances.length === 0) {
+        return [
+          {
+            id: student.id,
+            studentName: student.studentName,
+            attendanceDate: "No attendance recorded",
+            atendanceDateTime: "No attendance recorded",
+            attendedOnSelectedDate: selectedDate ? false : true,
+            className: "No attendance recorded",
+          },
+        ];
+      }
+
+      return studentAttendances.map((att) => {
+        const attDate = att.attendanceDate.toDate();
+        const selDate = selectedDate
+          ? new Date(selectedDate + "T00:00:00Z")
+          : null;
+
+        const attendedOnSelectedDate = selectedDate
+          ? attDate.getUTCFullYear() === selDate.getUTCFullYear() &&
+            attDate.getUTCMonth() === selDate.getUTCMonth() &&
+            attDate.getUTCDate() === selDate.getUTCDate()
+          : true; // If no date selected, include all attendances
+
+        return {
+          id: att.id,
+          studentName: student.studentName,
+          attendanceDateTime: att.attendanceDate,
+          attendanceDate: formatDate(att.attendanceDate),
+          attendedOnSelectedDate,
+          className: att.className,
+        };
+      });
 
       // Check if student attended on the selected date (ignoring time)
-      const attendedOnSelectedDate = selectedDate
-        ? studentAttendances.some((att) => {
-            const attDate = att.attendanceDate.toDate();
-            const selDate = new Date(selectedDate + "T00:00:00Z");
-            return (
-              attDate.getUTCFullYear() === selDate.getUTCFullYear() &&
-              attDate.getUTCMonth() === selDate.getUTCMonth() &&
-              attDate.getUTCDate() === selDate.getUTCDate()
-            );
-          })
-        : true; // If no date selected, include all students
-
-      return {
-        id: student.id,
-        studentName: student.studentName,
-        lastAttendance: lastAttendance
-          ? formatDate(lastAttendance.attendanceDate)
-          : "No attendance recorded",
-        totalAttendances,
-        attendedOnSelectedDate,
-      };
     });
+
+    filteredData = filteredData.flat();
 
     // Apply search filter
     filteredData = filteredData.filter((record) =>
@@ -90,9 +79,40 @@ export default function AttendanceView() {
       );
     }
 
-    return filteredData.sort((a, b) =>
-      a.studentName.localeCompare(b.studentName),
-    );
+    return filteredData.sort((a, b) => {
+      const aDate =
+        a.attendanceDate === "No attendance recorded"
+          ? null
+          : a.attendanceDateTime;
+      const bDate =
+        b.attendanceDate === "No attendance recorded"
+          ? null
+          : b.attendanceDateTime;
+
+      // If both are "No attendance recorded", sort by studentName
+      if (aDate === null && bDate === null) {
+        return a.studentName.localeCompare(b.studentName);
+      }
+
+      // If only a has no attendance, push it to the bottom
+      if (aDate === null) {
+        return 1; // b comes first
+      }
+
+      // If only b has no attendance, push it to the bottom
+      if (bDate === null) {
+        return -1; // a comes first
+      }
+
+      // If both have valid dates, compare them (most recent first)
+      const dateCompare = bDate - aDate;
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+
+      // If dates are the same, sort by studentName
+      return a.studentName.localeCompare(b.studentName);
+    });
   }, [students, attendances, searchTerm, selectedDate]);
 
   // Set default date to today
@@ -118,19 +138,6 @@ export default function AttendanceView() {
             placeholder="Search students by name..."
             className={INPUT_CLASSES}
           />
-          {suggestions.length > 0 && (
-            <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-              {suggestions.map((suggestion, index) => (
-                <li
-                  key={index}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className={SUGGESTION_CLASSES}
-                >
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
         <div className="flex items-center space-x-2">
           <label htmlFor="dateFilter" className="text-gray-700">
@@ -165,8 +172,8 @@ export default function AttendanceView() {
             <thead className="bg-gray-50">
               <tr>
                 <th className={TH_CLASSES}>Student Name</th>
-                <th className={TH_CLASSES}>Last Attendance</th>
-                <th className={TH_CLASSES}>Total Attendances</th>
+                <th className={TH_CLASSES}>Attendance</th>
+                <th className={TH_CLASSES}>Class Name</th>
               </tr>
             </thead>
             <tbody>
@@ -176,8 +183,8 @@ export default function AttendanceView() {
                   className="hover:bg-gray-50 transition duration-150"
                 >
                   <td className={TD_CLASSES}>{record.studentName}</td>
-                  <td className={TD_CLASSES}>{record.lastAttendance}</td>
-                  <td className={TD_CLASSES}>{record.totalAttendances}</td>
+                  <td className={TD_CLASSES}>{record.attendanceDate}</td>
+                  <td className={TD_CLASSES}>{record.className}</td>
                 </tr>
               ))}
             </tbody>

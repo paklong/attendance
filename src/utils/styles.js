@@ -36,3 +36,11 @@ export const successStyles =
   "text-green-600 text-base font-semibold mt-4 bg-green-100 p-3 rounded-md";
 export const errorHeaderStyles = "text-red-600 font-semibold text-sm";
 export const errorTextStyles = "text-red-600 text-sm";
+
+export const TABLE_CLASSES =
+  "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
+export const TH_CLASSES =
+  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
+export const TD_CLASSES =
+  "px-6 py-4 text-xs text-gray-800 border-b border-gray-200";
+("px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150");

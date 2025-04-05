@@ -1,46 +1,20 @@
 import { useState, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
+import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
 
 // Reusable style constants
 const INPUT_CLASSES =
   "w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200";
-const TABLE_CLASSES =
-  "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
-const TH_CLASSES =
-  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
-const TD_CLASSES = "px-6 py-4 text-xs text-gray-800 border-b border-gray-200";
-const SUGGESTION_CLASSES =
-  "px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150";
-
 export default function AdminStudentView() {
   const { data } = useOutletContext();
   const { students = [], parents = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
 
   // Handle search input and suggestions
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-
-    if (value.length > 0) {
-      const filteredSuggestions = students
-        .filter((student) =>
-          student.studentName.toLowerCase().includes(value.toLowerCase()),
-        )
-        .map((student) => student.studentName)
-        .slice(0, 5);
-      setSuggestions(filteredSuggestions);
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion) => {
-    setSearchTerm(suggestion);
-    setSuggestions([]);
   };
 
   // Memoized student data computation
@@ -58,7 +32,7 @@ export default function AdminStudentView() {
             (a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate),
           );
         const lastAttendance = studentAttendances[0];
-
+        const totalAttendances = studentAttendances.length;
         return {
           id: student.id,
           studentName: student.studentName,
@@ -67,6 +41,7 @@ export default function AdminStudentView() {
           lastAttendance: lastAttendance
             ? formatDate(lastAttendance.attendanceDate)
             : "No attendance recorded",
+          totalAttendances: totalAttendances,
         };
       })
       .filter((student) =>
@@ -88,19 +63,6 @@ export default function AdminStudentView() {
           placeholder="Search students by name..."
           className={INPUT_CLASSES}
         />
-        {suggestions.length > 0 && (
-          <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto text-xs">
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className={SUGGESTION_CLASSES}
-              >
-                {suggestion}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
 
       {/* Student Table or Empty State */}
@@ -113,6 +75,7 @@ export default function AdminStudentView() {
                 <th className={TH_CLASSES}>Parent Name</th>
                 <th className={TH_CLASSES}>Remaining Classes</th>
                 <th className={TH_CLASSES}>Last Attendance</th>
+                <th className={TH_CLASSES}>Total Attendances</th>
               </tr>
             </thead>
             <tbody>
@@ -131,6 +94,7 @@ export default function AdminStudentView() {
                     {student.remainingClasses}
                   </td>
                   <td className={TD_CLASSES}>{student.lastAttendance}</td>
+                  <td className={TD_CLASSES}>{student.totalAttendances}</td>
                 </tr>
               ))}
             </tbody>
