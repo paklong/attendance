@@ -57,6 +57,10 @@ export default function AdminPage() {
     }
   };
 
+  const fetchStudent = () => {
+    fetchData("students", getAllStudents);
+  };
+
   useEffect(() => {
     fetchData("students", getAllStudents);
     fetchData("parents", getAllParents);
@@ -117,7 +121,7 @@ export default function AdminPage() {
           </ul>
         </div>
       ) : (
-        <Outlet context={{ data, fetchData }} />
+        <Outlet context={{ data, fetchData, fetchStudent }} />
       )}
     </div>
   );

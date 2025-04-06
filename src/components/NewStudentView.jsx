@@ -4,7 +4,6 @@ import {
   generateStudentId,
   getAllParents,
 } from "../utils/firebase";
-import { useOutletContext } from "react-router-dom";
 import {
   containerStyles,
   h2Styles,

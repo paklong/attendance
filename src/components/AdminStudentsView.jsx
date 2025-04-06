@@ -2,20 +2,27 @@ import { useState, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
 import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
+import EditStudent from "./EditStudent";
+import { updateStudent } from "../utils/firebase";
 
 // Reusable style constants
 const INPUT_CLASSES =
   "w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200";
+
 export default function AdminStudentView() {
-  const { data } = useOutletContext();
+  const { data, fetchStudent } = useOutletContext(); // Assume context provides loading/error
   const { students = [], parents = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
   const [filterIsActive, setFilterIsActive] = useState(true);
 
-  // Handle search input and suggestions
+  // Handle search input
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
+  };
+
+  const handleStudentUpdate = () => {
+    fetchStudent();
   };
 
   // Memoized student data computation
@@ -43,16 +50,14 @@ export default function AdminStudentView() {
             ? formatDate(lastAttendance.attendanceDate)
             : "No attendance recorded",
           totalAttendances: totalAttendances,
-          isActive: student.isActive ? "True" : "False",
+          isActive: student.isActive ?? true, // Keep as boolean
           lastModifiedTime: formatDate(student.lastModifiedTime),
         };
       })
       .filter((student) =>
         student.studentName.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-      .filter((student) => {
-        return filterIsActive == true ? student.isActive === "True" : true;
-      });
+      .filter((student) => (filterIsActive ? student.isActive : true));
   }, [students, parents, attendances, searchTerm, filterIsActive]);
 
   return (
@@ -96,6 +101,8 @@ export default function AdminStudentView() {
                 <th className={TH_CLASSES}>Total Attendances</th>
                 <th className={TH_CLASSES}>Active Status</th>
                 <th className={TH_CLASSES}>Last Modified Time</th>
+                <th className={TH_CLASSES}>Actions</th>
+                {/* Added header for Edit */}
               </tr>
             </thead>
             <tbody>
@@ -115,8 +122,19 @@ export default function AdminStudentView() {
                   </td>
                   <td className={TD_CLASSES}>{student.lastAttendance}</td>
                   <td className={TD_CLASSES}>{student.totalAttendances}</td>
-                  <td className={TD_CLASSES}>{student.isActive}</td>
+                  <td className={TD_CLASSES}>
+                    {student.isActive ? "Yes" : "No"}
+                  </td>
                   <td className={TD_CLASSES}>{student.lastModifiedTime}</td>
+                  <td className={TD_CLASSES}>
+                    <EditStudent
+                      studentId={student.id}
+                      studentName={student.studentName}
+                      remainingClasses={student.remainingClasses}
+                      isActive={student.isActive}
+                      onUpdate={handleStudentUpdate}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
