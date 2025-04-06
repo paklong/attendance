@@ -25,7 +25,9 @@ export default function AddAttendanceView() {
     studnentName: "",
     className: "Traditional Art Class",
     attendance: "true",
-    attendanceDate: new Date().toISOString().split("T")[0],
+    attendanceDate: new Date().toLocaleDateString("en-CA", {
+      timeZone: "America/Los_Angeles",
+    }),
     attendanceTime: "10:00 AM",
   });
   const [students, setStudents] = useState([]);
