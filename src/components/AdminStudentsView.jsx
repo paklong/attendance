@@ -10,6 +10,7 @@ export default function AdminStudentView() {
   const { data } = useOutletContext();
   const { students = [], parents = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterIsActive, setFilterIsActive] = useState(true);
 
   // Handle search input and suggestions
   const handleSearch = (e) => {
@@ -42,19 +43,24 @@ export default function AdminStudentView() {
             ? formatDate(lastAttendance.attendanceDate)
             : "No attendance recorded",
           totalAttendances: totalAttendances,
+          isActive: student.isActive ? "True" : "False",
+          lastModifiedTime: formatDate(student.lastModifiedTime),
         };
       })
       .filter((student) =>
         student.studentName.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-  }, [students, parents, attendances, searchTerm]);
+      )
+      .filter((student) => {
+        return filterIsActive == true ? student.isActive === "True" : true;
+      });
+  }, [students, parents, attendances, searchTerm, filterIsActive]);
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-1">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Students</h2>
 
       {/* Search Bar */}
-      <div className="relative mb-6 w-full max-w-md">
+      <div className="relative mb-3 w-full max-w-md">
         <input
           type="text"
           spellCheck="false"
@@ -63,6 +69,18 @@ export default function AdminStudentView() {
           placeholder="Search students by name..."
           className={INPUT_CLASSES}
         />
+      </div>
+
+      {/* IsActive Toggle */}
+      <div className="text-xs py-1">
+        <label>
+          <input
+            type="checkbox"
+            onChange={() => setFilterIsActive((prev) => !prev)}
+            checked={filterIsActive}
+          />
+          <span className="ml-1">Show Active Only</span>
+        </label>
       </div>
 
       {/* Student Table or Empty State */}
@@ -76,6 +94,8 @@ export default function AdminStudentView() {
                 <th className={TH_CLASSES}>Remaining Classes</th>
                 <th className={TH_CLASSES}>Last Attendance</th>
                 <th className={TH_CLASSES}>Total Attendances</th>
+                <th className={TH_CLASSES}>Active Status</th>
+                <th className={TH_CLASSES}>Last Modified Time</th>
               </tr>
             </thead>
             <tbody>
@@ -95,6 +115,8 @@ export default function AdminStudentView() {
                   </td>
                   <td className={TD_CLASSES}>{student.lastAttendance}</td>
                   <td className={TD_CLASSES}>{student.totalAttendances}</td>
+                  <td className={TD_CLASSES}>{student.isActive}</td>
+                  <td className={TD_CLASSES}>{student.lastModifiedTime}</td>
                 </tr>
               ))}
             </tbody>

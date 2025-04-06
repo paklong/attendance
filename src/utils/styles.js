@@ -40,7 +40,7 @@ export const errorTextStyles = "text-red-600 text-sm";
 export const TABLE_CLASSES =
   "min-w-full bg-white border border-gray-200 rounded-lg shadow-sm";
 export const TH_CLASSES =
-  "px-6 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
+  "px-2 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
 export const TD_CLASSES =
-  "px-6 py-4 text-xs text-gray-800 border-b border-gray-200";
+  "px-2 py-1 text-xs text-gray-800 border-b border-gray-200";
 ("px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150");
