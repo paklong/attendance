@@ -3,14 +3,13 @@ import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
 import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
 import EditStudent from "./EditStudent";
-import { updateStudent } from "../utils/firebase";
 
 // Reusable style constants
 const INPUT_CLASSES =
   "w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200";
 
 export default function AdminStudentView() {
-  const { data, fetchStudent } = useOutletContext(); // Assume context provides loading/error
+  const { data, fetchStudents } = useOutletContext(); // Assume context provides loading/error
   const { students = [], parents = [], attendances = [] } = data || {};
   const [searchTerm, setSearchTerm] = useState("");
   const [filterIsActive, setFilterIsActive] = useState(true);
@@ -22,7 +21,7 @@ export default function AdminStudentView() {
   };
 
   const handleStudentUpdate = () => {
-    fetchStudent();
+    fetchStudents();
   };
 
   // Memoized student data computation

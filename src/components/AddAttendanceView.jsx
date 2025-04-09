@@ -3,6 +3,7 @@ import {
   createNewAttendance,
   getAllStudents,
   getAllParents,
+  updateStudent, // Import the updateStudent function
 } from "../utils/firebase";
 import {
   containerStyles,
@@ -18,24 +19,26 @@ import {
   loadingTextStyles,
 } from "../utils/styles";
 import { Timestamp } from "firebase/firestore";
+import { useOutletContext } from "react-router-dom";
 
 export default function AddAttendanceView() {
+  const { fetchAttendances } = useOutletContext();
   const [formData, setFormData] = useState({
     studentId: "",
-    studnentName: "",
+    studentName: "", // Fixed typo: studrnentName -> studentName
     className: "Traditional Art Class",
     attendance: "true",
     attendanceDate: new Date().toLocaleDateString("en-CA", {
       timeZone: "America/Los_Angeles",
     }),
-    attendanceTime: "10:00 AM",
+    attendanceTime: "10:00",
   });
   const [students, setStudents] = useState([]);
   const [parents, setParents] = useState([]);
   const [parentName, setParentName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStudents, setFilteredStudents] = useState([]);
-  const [isSearchFocused, setIsSearchFocused] = useState(false); // Track focus
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,7 +86,7 @@ export default function AddAttendanceView() {
   // Filter students based on search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredStudents(students); // Full list when empty
+      setFilteredStudents(students);
     } else {
       const filtered = students.filter((student) =>
         student.studentName.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -102,7 +105,7 @@ export default function AddAttendanceView() {
     const studentName = students.find((s) => s.id === studentId)?.studentName;
     setSearchQuery(studentName);
     setFilteredStudents(students);
-    setIsSearchFocused(false); // Hide suggestions after selection
+    setIsSearchFocused(false);
   };
 
   const handleSubmit = async (e) => {
@@ -126,9 +129,29 @@ export default function AddAttendanceView() {
         formData.attendance === "true",
         Timestamp.fromDate(attendaceDateTime),
       );
+
+      // Update remainingClasses if attendance is "Present"
+      if (formData.attendance === "true") {
+        const currentRemainingClasses = selectedStudent.remainingClasses || 0;
+        const newRemainingClasses = currentRemainingClasses - 1; // Decrease by 1, can go negative
+        await updateStudent(formData.studentId, {
+          remainingClasses: newRemainingClasses,
+        });
+
+        // Update local students state to reflect the change
+        setStudents((prevStudents) =>
+          prevStudents.map((student) =>
+            student.id === formData.studentId
+              ? { ...student, remainingClasses: newRemainingClasses }
+              : student,
+          ),
+        );
+      }
+
       setSuccess(
         `Attendance recorded for "${selectedStudent.studentName}" in "${formData.className}"`,
       );
+      fetchAttendances();
     } catch (err) {
       setError(err.message);
       setFormDisabled(false);
@@ -137,6 +160,7 @@ export default function AddAttendanceView() {
       setTimeout(() => setFormDisabled(false), 3000);
     }
   };
+
   return (
     <div className={containerStyles}>
       <h2 className={h2Styles}>Add Attendance</h2>
@@ -238,7 +262,7 @@ export default function AddAttendanceView() {
             </select>
           </div>
 
-          {/* Attendance Date*/}
+          {/* Attendance Date */}
           <div>
             <label htmlFor="attendanceDate" className={labelStyles}>
               Attendance Date

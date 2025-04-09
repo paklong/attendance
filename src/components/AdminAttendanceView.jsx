@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
 import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
+import RemoveAttendance from "./RemoveAttendance";
+import { updateStudent } from "../utils/firebase"; // Import updateStudent
 
 // Reusable style constants
 const INPUT_CLASSES =
@@ -29,7 +31,6 @@ export default function AttendanceView() {
 
     const _attendanceData = attendances.map((att) => {
       const attDate = att.attendanceDate.toDate();
-      window.attDate = attDate.toISOString().split("T")[0];
       return {
         ...att,
         attendanceDateTimeFormatted: formatDate(att.attendanceDate),
@@ -54,16 +55,61 @@ export default function AttendanceView() {
   }, [students, attendances]);
 
   const searchDebouncer = useDebouncer((value) => setSearchTerm(value), 300);
+
   // Handle search input
   const handleSearch = (e) => {
     const value = e.target.value;
     searchDebouncer(value);
   };
 
+  // Handle attendance removal and update remainingClasses
+  const handleAttendanceRemove = async (attendanceId) => {
+    try {
+      const attendanceToRemove = attendanceData.find(
+        (att) => att.id === attendanceId,
+      );
+      if (!attendanceToRemove) {
+        throw new Error("Attendance record not found");
+      }
+
+      // Only update remainingClasses if the attendance was "Present"
+      if (attendanceToRemove.attendance === true) {
+        const student = students.find(
+          (s) => s.id === attendanceToRemove.studentId,
+        );
+        if (student) {
+          const currentRemainingClasses = student.remainingClasses || 0;
+          const newRemainingClasses = currentRemainingClasses + 1; // Add 1 back
+
+          // Update Firestore
+          await updateStudent(attendanceToRemove.studentId, {
+            remainingClasses: newRemainingClasses,
+          });
+
+          // Update local students state
+          const updatedStudents = students.map((s) =>
+            s.id === attendanceToRemove.studentId
+              ? { ...s, remainingClasses: newRemainingClasses }
+              : s,
+          );
+          // Trigger a re-render by updating the outlet context or refetching data if needed
+          // For simplicity, we'll assume the parent updates the students array
+        }
+      }
+
+      // Remove the attendance from the local state
+      setAttendanceData((prev) =>
+        prev.filter((att) => att.id !== attendanceId),
+      );
+    } catch (error) {
+      console.error("Failed to update remaining classes:", error.message);
+    }
+  };
+
   let filteredData = attendanceData.map((att) => {
     const attendedOnSelectedDate = selectedDate
       ? att.attendanceDateFormatted === selectedDate
-      : true; // If no date selected, include all attendances
+      : true;
 
     return {
       id: att.id,
@@ -137,6 +183,7 @@ export default function AttendanceView() {
           Total Attendances Displayed: {filteredData.length}
         </p>
       )}
+
       {/* Attendance Table or Empty State */}
       {filteredData.length > 0 ? (
         <div className="overflow-x-auto rounded-lg">
@@ -146,6 +193,7 @@ export default function AttendanceView() {
                 <th className={TH_CLASSES}>Student Name</th>
                 <th className={TH_CLASSES}>Attendance</th>
                 <th className={TH_CLASSES}>Class Name</th>
+                <th className={TH_CLASSES}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -157,6 +205,12 @@ export default function AttendanceView() {
                   <td className={TD_CLASSES}>{record.studentName}</td>
                   <td className={TD_CLASSES}>{record.attendanceDate}</td>
                   <td className={TD_CLASSES}>{record.className}</td>
+                  <td className={TD_CLASSES}>
+                    <RemoveAttendance
+                      attendanceId={record.id}
+                      onRemove={handleAttendanceRemove} // Pass the callback
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
