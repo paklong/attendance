@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { deleteAttendance } from "../utils/firebase";
+import { deleteAttendance, updateStudent } from "../utils/firebase";
+import { increment } from "firebase/firestore";
 
-export default function RemoveAttendance({ attendanceId }) {
+export default function RemoveAttendance({
+  attendanceId,
+  studentId,
+  attendance,
+  onRemove,
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -12,7 +18,19 @@ export default function RemoveAttendance({ attendanceId }) {
     setError(null);
 
     try {
+      // Delete the attendance record
       await deleteAttendance(attendanceId);
+
+      // If the attendance was "Present", increment the student's remainingClasses
+      if (attendance === true) {
+        await updateStudent(studentId, {
+          remainingClasses: increment(1), // Use Firestore increment to safely update
+        });
+      }
+
+      // Notify the parent component of the successful deletion
+      onRemove(attendanceId);
+
       setIsDeleted(true);
       setShowConfirm(false);
     } catch (err) {

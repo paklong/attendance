@@ -3,7 +3,6 @@ import { useOutletContext } from "react-router-dom";
 import formatDate from "../utils/formatDate";
 import { TABLE_CLASSES, TH_CLASSES, TD_CLASSES } from "../utils/styles";
 import RemoveAttendance from "./RemoveAttendance";
-import { updateStudent } from "../utils/firebase"; // Import updateStudent
 
 // Reusable style constants
 const INPUT_CLASSES =
@@ -25,33 +24,34 @@ export default function AttendanceView() {
   const [attendanceData, setAttendanceData] = useState([]);
 
   useEffect(() => {
-    const studentsMap = Object.fromEntries(
-      students.map((student) => [student.id, student.studentName]),
-    );
+    if (attendances.length > 0) {
+      const studentsMap = Object.fromEntries(
+        students.map((student) => [student.id, student.studentName]),
+      );
+      const _attendanceData = attendances.map((att) => {
+        const attDate = att.attendanceDate.toDate();
+        return {
+          ...att,
+          attendanceDateTimeFormatted: formatDate(att.attendanceDate),
+          attendanceDateFormatted: attDate.toISOString().split("T")[0],
+          attendanceDate: attDate,
+          studentName: studentsMap[att.studentId],
+        };
+      });
 
-    const _attendanceData = attendances.map((att) => {
-      const attDate = att.attendanceDate.toDate();
-      return {
-        ...att,
-        attendanceDateTimeFormatted: formatDate(att.attendanceDate),
-        attendanceDateFormatted: attDate.toISOString().split("T")[0],
-        attendanceDate: attDate,
-        studentName: studentsMap[att.studentId],
-      };
-    });
+      const _sortedAttendanceData = _attendanceData.sort((a, b) => {
+        const aDate = a.attendanceDate;
+        const bDate = b.attendanceDate;
 
-    const _sortedAttendanceData = _attendanceData.sort((a, b) => {
-      const aDate = a.attendanceDate;
-      const bDate = b.attendanceDate;
+        const dateCompare = bDate - aDate;
+        if (dateCompare !== 0) {
+          return dateCompare;
+        }
 
-      const dateCompare = bDate - aDate;
-      if (dateCompare !== 0) {
-        return dateCompare;
-      }
-
-      return a.studentName.localeCompare(b.studentName);
-    });
-    setAttendanceData(_sortedAttendanceData);
+        return a.studentName.localeCompare(b.studentName);
+      });
+      setAttendanceData(_sortedAttendanceData);
+    }
   }, [students, attendances]);
 
   const searchDebouncer = useDebouncer((value) => setSearchTerm(value), 300);
@@ -62,48 +62,9 @@ export default function AttendanceView() {
     searchDebouncer(value);
   };
 
-  // Handle attendance removal and update remainingClasses
-  const handleAttendanceRemove = async (attendanceId) => {
-    try {
-      const attendanceToRemove = attendanceData.find(
-        (att) => att.id === attendanceId,
-      );
-      if (!attendanceToRemove) {
-        throw new Error("Attendance record not found");
-      }
-
-      // Only update remainingClasses if the attendance was "Present"
-      if (attendanceToRemove.attendance === true) {
-        const student = students.find(
-          (s) => s.id === attendanceToRemove.studentId,
-        );
-        if (student) {
-          const currentRemainingClasses = student.remainingClasses || 0;
-          const newRemainingClasses = currentRemainingClasses + 1; // Add 1 back
-
-          // Update Firestore
-          await updateStudent(attendanceToRemove.studentId, {
-            remainingClasses: newRemainingClasses,
-          });
-
-          // Update local students state
-          const updatedStudents = students.map((s) =>
-            s.id === attendanceToRemove.studentId
-              ? { ...s, remainingClasses: newRemainingClasses }
-              : s,
-          );
-          // Trigger a re-render by updating the outlet context or refetching data if needed
-          // For simplicity, we'll assume the parent updates the students array
-        }
-      }
-
-      // Remove the attendance from the local state
-      setAttendanceData((prev) =>
-        prev.filter((att) => att.id !== attendanceId),
-      );
-    } catch (error) {
-      console.error("Failed to update remaining classes:", error.message);
-    }
+  // Handle attendance removal (update local state only)
+  const handleAttendanceRemove = (attendanceId) => {
+    setAttendanceData((prev) => prev.filter((att) => att.id !== attendanceId));
   };
 
   let filteredData = attendanceData.map((att) => {
@@ -118,6 +79,8 @@ export default function AttendanceView() {
       attendanceDate: att.attendanceDateTimeFormatted,
       attendedOnSelectedDate,
       className: att.className,
+      studentId: att.studentId, // Pass studentId for removal
+      attendance: att.attendance, // Pass attendance status
     };
   });
 
@@ -208,7 +171,9 @@ export default function AttendanceView() {
                   <td className={TD_CLASSES}>
                     <RemoveAttendance
                       attendanceId={record.id}
-                      onRemove={handleAttendanceRemove} // Pass the callback
+                      studentId={record.studentId}
+                      attendance={record.attendance}
+                      onRemove={handleAttendanceRemove}
                     />
                   </td>
                 </tr>

@@ -5,7 +5,7 @@ import {
   getAllParents,
   getAllAttendances,
 } from "../utils/firebase";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   adminContainerStyles,
   headerStyles,
@@ -64,6 +64,7 @@ export default function AdminPage() {
   const fetchParents = () => {
     fetchData("parents", getAllParents);
   };
+
   const fetchAttendances = () => {
     fetchData("attendances", getAllAttendances);
   };
@@ -76,7 +77,12 @@ export default function AdminPage() {
 
   const isLoading = Object.values(loading).some((status) => status);
   const hasErrors = Object.values(errors).some((error) => error !== null);
+  const navigate = useNavigate();
 
+  const handleLinkClick = (path, fetchFn) => {
+    fetchFn();
+    navigate(path);
+  };
   return (
     <div className={adminContainerStyles}>
       {/* Header Section */}
@@ -91,23 +97,35 @@ export default function AdminPage() {
 
       {/* Navigation */}
       <nav className={navStyles}>
-        <Link to="students" className={navButtonStyles}>
+        <button
+          className={navButtonStyles}
+          onClick={() => handleLinkClick("students", fetchStudents)}
+        >
           Students
-        </Link>
-        <Link to="attendances" className={navButtonStyles}>
+        </button>
+        <button
+          className={navButtonStyles}
+          onClick={() => handleLinkClick("attendances", fetchAttendances)}
+        >
           Attendance
-        </Link>
+        </button>
       </nav>
       <nav className={navStyles}>
         <Link to="new-parent" className={navButtonStylesEdit}>
           New Parent
         </Link>
-        <Link to="new-student" className={navButtonStylesEdit}>
+        <button
+          className={navButtonStylesEdit}
+          onClick={() => handleLinkClick("new-student", fetchParents)}
+        >
           New Student
-        </Link>
-        <Link to="add-attendance" className={navButtonStylesEdit}>
+        </button>
+        <button
+          className={navButtonStylesEdit}
+          onClick={() => handleLinkClick("add-attendance", fetchStudents)}
+        >
           Add Attendance
-        </Link>
+        </button>
       </nav>
 
       {/* Loading/Error States */}
@@ -132,8 +150,6 @@ export default function AdminPage() {
           context={{
             data,
             fetchStudents,
-            fetchParents,
-            fetchAttendances,
           }}
         />
       )}

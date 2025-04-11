@@ -11,10 +11,8 @@ import {
   errorStyles,
   successStyles,
 } from "../utils/styles";
-import { useOutletContext } from "react-router-dom";
 
 export default function NewParentView() {
-  const { fetchParents } = useOutletContext();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -46,8 +44,6 @@ export default function NewParentView() {
       setSuccess(
         `Parent "${newParent.parentName}" created successfully with ID: ${newParent.id}`,
       );
-      // Refresh parents in AdminPage after creation
-      fetchParents();
     } catch (err) {
       setError(err.message);
       setFormDisabled(false);

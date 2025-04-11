@@ -19,10 +19,8 @@ import {
   loadingTextStyles,
 } from "../utils/styles";
 import { Timestamp } from "firebase/firestore";
-import { useOutletContext } from "react-router-dom";
 
 export default function AddAttendanceView() {
-  const { fetchAttendances } = useOutletContext();
   const [formData, setFormData] = useState({
     studentId: "",
     studentName: "", // Fixed typo: studrnentName -> studentName
@@ -151,7 +149,6 @@ export default function AddAttendanceView() {
       setSuccess(
         `Attendance recorded for "${selectedStudent.studentName}" in "${formData.className}"`,
       );
-      fetchAttendances();
     } catch (err) {
       setError(err.message);
       setFormDisabled(false);

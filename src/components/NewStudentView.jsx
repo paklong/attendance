@@ -15,7 +15,7 @@ import {
 import { useOutletContext } from "react-router-dom";
 
 export default function NewStudentView() {
-  const { data, fetchStudents } = useOutletContext();
+  const { data } = useOutletContext();
   const [formData, setFormData] = useState({
     studentName: "",
     parentId: "",
@@ -57,7 +57,6 @@ export default function NewStudentView() {
       setSuccess(
         `Student "${newStudent.studentName}" created successfully with ID: ${newStudent.id}`,
       );
-      fetchStudents();
     } catch (err) {
       setError(err.message);
       setFormDisabled(false);
