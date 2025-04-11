@@ -100,7 +100,6 @@ export default function EditStudent({
                   value={formData.remainingClasses}
                   onChange={handleChange}
                   className="w-full p-2 border rounded"
-                  min="0"
                   required
                 />
               </div>
