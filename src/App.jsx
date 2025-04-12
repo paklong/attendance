@@ -13,6 +13,8 @@ import AttendanceView from "./components/AdminAttendanceView.jsx";
 import NewParentView from "./components/NewParentView.jsx";
 import NewStudentView from "./components/NewStudentView.jsx";
 import AddAttendanceView from "./components/AddAttendanceView.jsx";
+import AddArtWorkView from "./components/AddArtWorkView.jsx";
+import { AdminArtWorkView } from "./components/AdminArtWorkView.jsx";
 
 function App() {
   const { currentUser, setCurrentUser, userProfile, loading } = useAuth();
@@ -58,6 +60,7 @@ function App() {
             <Route path="new-parent" element={<NewParentView />} />
             <Route path="new-student" element={<NewStudentView />} />
             <Route path="add-attendance" element={<AddAttendanceView />} />
+            <Route path="add-artworks" element={<AddArtWorkView />} />
           </Route>
 
           {/* /home: Only for authenticated non-admins (or all authenticated users if nested routes apply) */}

@@ -1,17 +1,5 @@
 import { useState } from "react";
 import { createNewStudent, generateStudentId } from "../utils/firebase";
-import {
-  containerStyles,
-  h2Styles,
-  formStyles,
-  labelStyles,
-  inputStyles,
-  selectStyles,
-  submitButtonStyles,
-  disabledButtonStyles,
-  errorStyles,
-  successStyles,
-} from "../utils/styles";
 import { useOutletContext } from "react-router-dom";
 
 export default function NewStudentView() {
@@ -67,14 +55,17 @@ export default function NewStudentView() {
   };
 
   return (
-    <div className={containerStyles}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className={h2Styles}>Create New Student</h2>
-      </div>
-
-      <form onSubmit={handleSubmit} className={formStyles}>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        Create New Student
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Student Name Field */}
         <div>
-          <label htmlFor="studentName" className={labelStyles}>
+          <label
+            htmlFor="studentName"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Student Name
           </label>
           <input
@@ -83,15 +74,21 @@ export default function NewStudentView() {
             name="studentName"
             value={formData.studentName}
             onChange={handleChange}
-            className={inputStyles(formDisabled)}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             required
             disabled={formDisabled}
             placeholder="Winsey Kwan"
           />
         </div>
 
+        {/* Parent Selection Field */}
         <div>
-          <label htmlFor="parentId" className={labelStyles}>
+          <label
+            htmlFor="parentId"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Select Parent
           </label>
           <select
@@ -99,7 +96,11 @@ export default function NewStudentView() {
             name="parentId"
             value={formData.parentId}
             onChange={handleChange}
-            className={selectStyles}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled || parents.length === 0
+                ? "bg-gray-100 cursor-not-allowed"
+                : ""
+            }`}
             disabled={formDisabled || parents.length === 0}
           >
             {sortedParents.length === 0 ? (
@@ -119,8 +120,12 @@ export default function NewStudentView() {
           </select>
         </div>
 
+        {/* Remaining Classes Field */}
         <div>
-          <label htmlFor="remainingClasses" className={labelStyles}>
+          <label
+            htmlFor="remainingClasses"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Remaining Classes
           </label>
           <input
@@ -129,27 +134,40 @@ export default function NewStudentView() {
             name="remainingClasses"
             value={formData.remainingClasses}
             onChange={handleChange}
-            className={inputStyles(formDisabled)}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             min="0"
             disabled={formDisabled}
             placeholder="e.g., 12"
           />
         </div>
 
+        {/* Submit Button */}
         <button
           type="submit"
-          className={
-            loading || formDisabled ? disabledButtonStyles : submitButtonStyles
-          }
+          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+            loading || formDisabled
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          }`}
           disabled={loading || formDisabled}
         >
           {loading ? "Creating..." : "Create Student"}
         </button>
 
-        {error && <p className={errorStyles}>{error}</p>}
-      </form>
+        {/* Error Message */}
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
+        )}
 
-      {success && <p className={successStyles}>{success}</p>}
+        {/* Success Message */}
+        {success && (
+          <p className="text-sm text-green-600 bg-green-50 p-2 rounded">
+            {success}
+          </p>
+        )}
+      </form>
     </div>
   );
 }

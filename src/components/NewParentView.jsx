@@ -1,16 +1,5 @@
 import { useState } from "react";
 import { createNewParent } from "../utils/firebase";
-import {
-  containerStyles,
-  h2Styles,
-  formStyles,
-  labelStyles,
-  inputStyles,
-  submitButtonStyles,
-  disabledButtonStyles,
-  errorStyles,
-  successStyles,
-} from "../utils/styles";
 
 export default function NewParentView() {
   const [formData, setFormData] = useState({
@@ -54,12 +43,17 @@ export default function NewParentView() {
   };
 
   return (
-    <div className={containerStyles}>
-      <h2 className={h2Styles}>Create New Parent</h2>
-      <form onSubmit={handleSubmit} className={formStyles}>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+        Create New Parent
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className={labelStyles}>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Email
           </label>
           <input
@@ -68,34 +62,44 @@ export default function NewParentView() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className={inputStyles(formDisabled)}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             required
             disabled={formDisabled}
-            placeholder="paklong2556@gmail.com"
+            placeholder="paklong2556@gamil.com"
           />
         </div>
 
-        {/* Phone Number Field */}
+        {/* Password Field */}
         <div>
-          <label htmlFor="password" className={labelStyles}>
-            Phone Number (Password)
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Password
           </label>
           <input
-            type="tel"
+            type="password"
             id="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className={inputStyles(formDisabled)}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             required
             disabled={formDisabled}
-            placeholder="5109352858"
+            placeholder="5109352857"
           />
         </div>
 
         {/* Parent Name Field */}
         <div>
-          <label htmlFor="parentName" className={labelStyles}>
+          <label
+            htmlFor="parentName"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Parent Name
           </label>
           <input
@@ -104,30 +108,40 @@ export default function NewParentView() {
             name="parentName"
             value={formData.parentName}
             onChange={handleChange}
-            className={inputStyles(formDisabled)}
+            className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             required
             disabled={formDisabled}
-            placeholder="Pak Long Wan"
+            placeholder="Pak Wan :)"
           />
         </div>
 
         {/* Submit Button */}
         <button
           type="submit"
-          className={
-            loading || formDisabled ? disabledButtonStyles : submitButtonStyles
-          }
+          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+            loading || formDisabled
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          }`}
           disabled={loading || formDisabled}
         >
           {loading ? "Creating..." : "Create Parent"}
         </button>
 
         {/* Error Message */}
-        {error && <p className={errorStyles}>{error}</p>}
-      </form>
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
+        )}
 
-      {/* Success Message */}
-      {success && <p className={successStyles}>{success}</p>}
+        {/* Success Message */}
+        {success && (
+          <p className="text-sm text-green-600 bg-green-50 p-2 rounded">
+            {success}
+          </p>
+        )}
+      </form>
     </div>
   );
 }

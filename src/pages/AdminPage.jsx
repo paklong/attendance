@@ -126,6 +126,12 @@ export default function AdminPage() {
         >
           Add Attendance
         </button>
+        <button
+          className={navButtonStylesEdit}
+          onClick={() => handleLinkClick("add-artworks", fetchStudents)}
+        >
+          Add Artworks
+        </button>
       </nav>
 
       {/* Loading/Error States */}

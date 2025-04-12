@@ -14,12 +14,15 @@ import {
   setDoc,
   updateDoc,
   where,
+  addDoc,
 } from "firebase/firestore";
 import {
   createUserWithEmailAndPassword,
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Compressor from "compressorjs";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_apiKey,
@@ -31,10 +34,11 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const limitResult = 200;
+const limitResult = 10000;
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app); // Export storage for artwork operations
 
 const adminApp = initializeApp(firebaseConfig, "adminApp");
 const adminAuth = getAuth(adminApp);
@@ -43,14 +47,10 @@ export const firebaseSignIn = (auth, email, password) => {
   return signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      // console.log(`User email: ${user.email}`);
       return user;
     })
     .catch((error) => {
       const errorCode = error.code;
-      // const errorMessage = error.message;
-      // console.log(`Error: ${errorCode}: ${errorMessage}`);
-
       let customMessage;
       switch (errorCode) {
         case "auth/invalid-email":
@@ -80,10 +80,8 @@ export const getUserProfile = async (userId) => {
   const userRef = doc(db, "users", userId);
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
-    // console.log("User Profile from firebase.js " + userSnap.data());
     return userSnap.data();
   } else {
-    // console.log(`No user ${userId} found`);
     return null;
   }
 };
@@ -92,10 +90,8 @@ export const getStudentProfile = async (studentId) => {
   const studentRef = doc(db, "students", studentId);
   const studentSnap = await getDoc(studentRef);
   if (studentSnap.exists()) {
-    // console.log(`Student ${studentSnap.data().studentName} found`);
     return { ...studentSnap.data(), studentId };
   } else {
-    // console.log(`No student ${studentId} found`);
     return null;
   }
 };
@@ -154,21 +150,19 @@ export const getAllAttendances = async () => {
 // 1. Create New Parent (with Firebase Auth)
 export const createNewParent = async (email, password, parentName) => {
   try {
-    // Create a new user in Firebase Auth using the secondary app
     const userCredential = await createUserWithEmailAndPassword(
       adminAuth,
       email,
       password,
     );
     const user = userCredential.user;
-    const userId = user.uid; // Use the auth UID as the document ID
+    const userId = user.uid;
 
-    // Create the corresponding parent document in Firestore (using primary app's db)
     const userRef = doc(db, "users", userId);
     const parentData = {
       email,
       parentName,
-      studentIDs: [], // Initialize as empty array
+      studentIDs: [],
       lastModifiedTime: serverTimestamp(),
       isActive: true,
     };
@@ -196,7 +190,6 @@ export const createNewParent = async (email, password, parentName) => {
 };
 
 // 2. Create New Student
-// New function to generate student ID
 export const generateStudentId = () => {
   const studentRef = doc(collection(db, "students"));
   return studentRef.id;
@@ -211,7 +204,7 @@ export const createNewStudent = async (
   const studentRef = doc(db, "students", studentId);
   const studentData = {
     studentName,
-    parentId, // Single string, not an array
+    parentId,
     remainingClasses,
     lastModifiedTime: serverTimestamp(),
     isActive: true,
@@ -220,7 +213,6 @@ export const createNewStudent = async (
   try {
     await setDoc(studentRef, studentData);
     if (parentId) {
-      // Only update parent if a parentId is provided
       const parentRef = doc(db, "users", parentId);
       await updateDoc(parentRef, {
         studentIDs: arrayUnion(studentId),
@@ -323,5 +315,71 @@ export const deleteAttendance = async (attendanceId) => {
     return { id: attendanceId, success: true };
   } catch (error) {
     throw new Error(`Failed to delete attendance: ${error.message}`);
+  }
+};
+
+// 8. Upload Artwork Image
+export const uploadArtworkImage = async (image) => {
+  try {
+    const fileName = `${Date.now()}_${image.name}`;
+    const storageRef = ref(storage, `student_artworks/${fileName}`);
+
+    // Compress image
+    const compressedImage = await new Promise((resolve, reject) => {
+      new Compressor(image, {
+        quality: 0.8,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        success(result) {
+          resolve(result);
+        },
+        error(err) {
+          reject(err);
+        },
+      });
+    });
+
+    // Upload to Firebase Storage
+    await uploadBytes(storageRef, compressedImage);
+    const downloadURL = await getDownloadURL(storageRef);
+
+    return { fileName, downloadURL };
+  } catch (error) {
+    throw new Error(`Failed to upload image: ${error.message}`);
+  }
+};
+
+// 9. Create Artwork
+export const createArtwork = async (imageUrl, studentIds, fileName) => {
+  try {
+    const artworkRef = await addDoc(collection(db, "artworks"), {
+      imageUrl,
+      studentIds,
+      fileName,
+      createdAt: serverTimestamp(), // Use serverTimestamp for consistency
+    });
+    return { id: artworkRef.id, imageUrl, studentIds, fileName };
+  } catch (error) {
+    throw new Error(`Failed to create artwork: ${error.message}`);
+  }
+};
+
+// 10. Get Artworks for a Student
+export const getArtworksForStudent = async (studentId) => {
+  try {
+    const q = query(
+      collection(db, "artworks"),
+      where("studentIds", "array-contains", studentId),
+      orderBy("createdAt", "desc"),
+      limit(limitResult),
+    );
+    const querySnap = await getDocs(q);
+    const results = querySnap.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return results;
+  } catch (error) {
+    throw new Error(`Failed to fetch artworks: ${error.message}`);
   }
 };

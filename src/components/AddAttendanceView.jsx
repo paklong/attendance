@@ -3,27 +3,14 @@ import {
   createNewAttendance,
   getAllStudents,
   getAllParents,
-  updateStudent, // Import the updateStudent function
+  updateStudent,
 } from "../utils/firebase";
-import {
-  containerStyles,
-  h2Styles,
-  formStyles,
-  labelStyles,
-  inputStyles,
-  selectStyles,
-  submitButtonStyles,
-  disabledButtonStyles,
-  errorStyles,
-  successStyles,
-  loadingTextStyles,
-} from "../utils/styles";
 import { Timestamp } from "firebase/firestore";
 
 export default function AddAttendanceView() {
   const [formData, setFormData] = useState({
     studentId: "",
-    studentName: "", // Fixed typo: studrnentName -> studentName
+    studentName: "",
     className: "Traditional Art Class",
     attendance: "true",
     attendanceDate: new Date().toLocaleDateString("en-CA", {
@@ -131,12 +118,12 @@ export default function AddAttendanceView() {
       // Update remainingClasses if attendance is "Present"
       if (formData.attendance === "true") {
         const currentRemainingClasses = selectedStudent.remainingClasses || 0;
-        const newRemainingClasses = currentRemainingClasses - 1; // Decrease by 1, can go negative
+        const newRemainingClasses = currentRemainingClasses - 1;
         await updateStudent(formData.studentId, {
           remainingClasses: newRemainingClasses,
         });
 
-        // Update local students state to reflect the change
+        // Update local students state
         setStudents((prevStudents) =>
           prevStudents.map((student) =>
             student.id === formData.studentId
@@ -159,16 +146,19 @@ export default function AddAttendanceView() {
   };
 
   return (
-    <div className={containerStyles}>
-      <h2 className={h2Styles}>Add Attendance</h2>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Add Attendance</h2>
 
       {studentsLoading ? (
-        <p className={loadingTextStyles}>Loading students...</p>
+        <p className="text-gray-500 text-center">Loading students...</p>
       ) : (
-        <form onSubmit={handleSubmit} className={formStyles}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Student Search Bar */}
           <div className="relative">
-            <label htmlFor="studentSearch" className={labelStyles}>
+            <label
+              htmlFor="studentSearch"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Search Student
             </label>
             <input
@@ -180,25 +170,27 @@ export default function AddAttendanceView() {
               onBlur={() => {
                 setTimeout(() => setIsSearchFocused(false), 200);
               }}
-              className={inputStyles(formDisabled)}
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
               disabled={formDisabled}
               placeholder="Type to search students..."
               spellCheck="false"
             />
             {isSearchFocused && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-sm max-h-64 overflow-y-auto p-2">
                 {filteredStudents.length > 0 ? (
                   filteredStudents.map((student) => (
                     <div
                       key={student.id}
                       onMouseDown={() => handleStudentSelect(student.id)}
-                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded cursor-pointer"
                     >
                       {student.studentName}
                     </div>
                   ))
                 ) : (
-                  <div className="px-3 py-2 text-gray-500">
+                  <div className="px-2 py-1 text-sm text-gray-500">
                     No students found
                   </div>
                 )}
@@ -208,14 +200,17 @@ export default function AddAttendanceView() {
 
           {/* Parent Name (Read-Only) */}
           <div>
-            <label htmlFor="parentName" className={labelStyles}>
+            <label
+              htmlFor="parentName"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Parent Name
             </label>
             <input
               type="text"
               id="parentName"
               value={parentName}
-              className={inputStyles(true)}
+              className="w-full p-2 border rounded-md text-sm bg-gray-100 cursor-not-allowed"
               disabled
               placeholder="Select a student to see parent"
             />
@@ -223,7 +218,10 @@ export default function AddAttendanceView() {
 
           {/* Class Name Dropdown */}
           <div>
-            <label htmlFor="className" className={labelStyles}>
+            <label
+              htmlFor="className"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Class Name
             </label>
             <select
@@ -231,7 +229,9 @@ export default function AddAttendanceView() {
               name="className"
               value={formData.className}
               onChange={handleChange}
-              className={selectStyles}
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
               disabled={formDisabled}
             >
               <option value="Traditional Art Class">
@@ -243,7 +243,10 @@ export default function AddAttendanceView() {
 
           {/* Attendance Dropdown */}
           <div>
-            <label htmlFor="attendance" className={labelStyles}>
+            <label
+              htmlFor="attendance"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Attendance
             </label>
             <select
@@ -251,7 +254,9 @@ export default function AddAttendanceView() {
               name="attendance"
               value={formData.attendance}
               onChange={handleChange}
-              className={selectStyles}
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
               disabled={formDisabled}
             >
               <option value="true">Present</option>
@@ -261,7 +266,10 @@ export default function AddAttendanceView() {
 
           {/* Attendance Date */}
           <div>
-            <label htmlFor="attendanceDate" className={labelStyles}>
+            <label
+              htmlFor="attendanceDate"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Attendance Date
             </label>
             <input
@@ -270,14 +278,19 @@ export default function AddAttendanceView() {
               type="date"
               value={formData.attendanceDate}
               onChange={handleChange}
-              className={selectStyles}
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
               disabled={formDisabled}
             />
           </div>
 
           {/* Attendance Time */}
           <div>
-            <label htmlFor="attendanceTime" className={labelStyles}>
+            <label
+              htmlFor="attendanceTime"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Attendance Time
             </label>
             <select
@@ -285,7 +298,9 @@ export default function AddAttendanceView() {
               name="attendanceTime"
               value={formData.attendanceTime}
               onChange={handleChange}
-              className={selectStyles}
+              className={`w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                formDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+              }`}
               disabled={formDisabled}
             >
               <option value="10:00">10:00 AM</option>
@@ -298,21 +313,31 @@ export default function AddAttendanceView() {
           {/* Submit Button */}
           <button
             type="submit"
-            className={
+            className={`w-full py-2 px-4 rounded-md text-white font-medium ${
               loading || formDisabled
-                ? disabledButtonStyles
-                : submitButtonStyles
-            }
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            }`}
             disabled={loading || formDisabled}
           >
             {loading ? "Recording..." : "Record Attendance"}
           </button>
 
-          {error && <p className={errorStyles}>{error}</p>}
+          {/* Error Message */}
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              {error}
+            </p>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <p className="text-sm text-green-600 bg-green-50 p-2 rounded">
+              {success}
+            </p>
+          )}
         </form>
       )}
-
-      {success && <p className={successStyles}>{success}</p>}
     </div>
   );
 }
