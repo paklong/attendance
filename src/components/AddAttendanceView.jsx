@@ -141,7 +141,7 @@ export default function AddAttendanceView() {
       setFormDisabled(false);
     } finally {
       setLoading(false);
-      setTimeout(() => setFormDisabled(false), 3000);
+      setTimeout(() => setFormDisabled(false), 300);
     }
   };
 
