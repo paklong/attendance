@@ -61,6 +61,7 @@ function App() {
             <Route path="new-student" element={<NewStudentView />} />
             <Route path="add-attendance" element={<AddAttendanceView />} />
             <Route path="add-artworks" element={<AddArtWorkView />} />
+            <Route path="view-artworks" element={<AdminArtWorkView />} />
           </Route>
 
           {/* /home: Only for authenticated non-admins (or all authenticated users if nested routes apply) */}

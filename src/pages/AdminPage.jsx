@@ -109,6 +109,12 @@ export default function AdminPage() {
         >
           Attendance
         </button>
+        <button
+          className={navButtonStyles}
+          onClick={() => handleLinkClick("view-artworks", fetchStudents)}
+        >
+          View Artworks
+        </button>
       </nav>
       <nav className={navStyles}>
         <Link to="new-parent" className={navButtonStylesEdit}>

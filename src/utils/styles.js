@@ -9,7 +9,7 @@ export const inputStylesBase =
   "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 export const inputStyles = (disabled) =>
   `${inputStylesBase} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`;
-export const selectStyles = inputStylesBase; // Single-select doesn’t need extra height
+export const selectStyles = inputStylesBase; // Single-select doesn't need extra height
 export const buttonBaseStyles =
   "px-4 py-2 text-sm text-white rounded-md transition duration-150 focus:outline-none focus:ring-2";
 export const submitButtonStyles = `${buttonBaseStyles} bg-blue-600 hover:bg-blue-700 focus:ring-blue-500`;
@@ -43,4 +43,12 @@ export const TH_CLASSES =
   "px-2 py-3 text-left text-xs font-semibold text-gray-700 border-b border-gray-400";
 export const TD_CLASSES =
   "px-2 py-1 text-xs text-gray-800 border-b border-gray-200";
-("px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer transition duration-150");
+
+// Artwork specific styles
+export const artworkGridStyles =
+  "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
+export const artworkCardStyles =
+  "bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden relative p-2 flex flex-col items-center";
+export const artworkImageStyles =
+  "w-full h-32 object-contain mb-1 bg-gray-100"; // Added background for loading
+export const noArtworksTextStyles = "text-gray-500 text-center mt-6";

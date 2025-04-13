@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { getAttendance } from "../utils/firebase";
 import formatDate from "../utils/formatDate";
+import {
+  h2Styles,
+  TABLE_CLASSES,
+  TH_CLASSES,
+  TD_CLASSES,
+  noArtworksTextStyles,
+} from "../utils/styles"; // Import shared styles
 
 export default function AttendancePage() {
   const { studentName } = useParams();
@@ -29,23 +36,17 @@ export default function AttendancePage() {
 
   return (
     <div className="mt-4 p-6 bg-white rounded-lg shadow-md max-w-2xl mx-auto">
-      <h2 className="text-center text-2xl font-bold text-gray-800 mb-4">
+      <h2 className={`${h2Styles} text-center`}>
         Attendance for {studentName}
       </h2>
       {attendances.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className={TABLE_CLASSES}>
             <thead>
               <tr className="bg-gray-100">
-                <th className="p-3 text-sm font-semibold text-gray-600">
-                  Date
-                </th>
-                <th className="p-3 text-sm font-semibold text-gray-600">
-                  Class
-                </th>
-                <th className="p-3 text-sm font-semibold text-gray-600">
-                  Status
-                </th>
+                <th className={TH_CLASSES}>Date</th>
+                <th className={TH_CLASSES}>Class</th>
+                <th className={TH_CLASSES}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -54,11 +55,9 @@ export default function AttendancePage() {
                   key={record.id}
                   className="border-b border-gray-200 hover:bg-gray-50"
                 >
-                  <td className="p-3 text-gray-700">
-                    {formatDate(record.attendanceDate)}
-                  </td>
-                  <td className="p-3 text-gray-700">{record.className}</td>
-                  <td className="p-3">
+                  <td className={TD_CLASSES}>{formatDate(record.attendanceDate)}</td>
+                  <td className={TD_CLASSES}>{record.className}</td>
+                  <td className={TD_CLASSES}>
                     <span
                       className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
                         record.attendance
@@ -75,7 +74,7 @@ export default function AttendancePage() {
           </table>
         </div>
       ) : (
-        <p className="text-gray-500 text-center">
+        <p className={`${noArtworksTextStyles} text-center`}>
           No attendance records found for {studentName}.
         </p>
       )}

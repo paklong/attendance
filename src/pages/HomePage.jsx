@@ -3,6 +3,11 @@ import CurrentUserContext from "../context/CurrentUserContext";
 import { auth, getStudentProfile } from "../utils/firebase";
 import StudentProfilesCard from "../components/StudentProfilesCard";
 import { Link, Outlet } from "react-router-dom";
+import {
+  titleStyles,
+  noArtworksTextStyles as noProfilesTextStyles,
+  signOutButtonStyles,
+} from "../utils/styles";
 
 export default function HomePage() {
   const { currentUser, userProfile } = useContext(CurrentUserContext);
@@ -49,7 +54,9 @@ export default function HomePage() {
         </Link>
       </h1>
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
-        {studentProfiles && studentProfiles.length > 0 ? (
+        {studentProfiles === null ? (
+          <p className="text-gray-500 text-center">Loading profiles...</p>
+        ) : studentProfiles.length > 0 ? (
           studentProfiles.map((student) => {
             return (
               <StudentProfilesCard
@@ -63,7 +70,7 @@ export default function HomePage() {
             );
           })
         ) : (
-          <p className="text-gray-500 text-center">
+          <p className={`${noProfilesTextStyles} text-center`}>
             No student profiles available.
           </p>
         )}
@@ -73,7 +80,7 @@ export default function HomePage() {
         onClick={() => {
           auth.signOut();
         }}
-        className="mt-6 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+        className={`${signOutButtonStyles} mt-3`}
       >
         Sign Out
       </button>

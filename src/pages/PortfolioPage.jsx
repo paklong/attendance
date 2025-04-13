@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { getArtworksForStudent } from "../utils/firebase";
+import {
+  artworkGridStyles,
+  artworkCardStyles,
+  artworkImageStyles,
+  noArtworksTextStyles,
+  errorTextStyles,
+  h2Styles,
+  loadingTextStyles,
+} from "../utils/styles";
 
 export default function PortfolioPage() {
   const { studentName } = useParams();
@@ -43,52 +52,51 @@ export default function PortfolioPage() {
 
   return (
     <div className="mt-4 p-4 bg-white rounded-lg shadow-md max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
         Portfolio for {studentName || "Student"}
       </h2>
       {loading ? (
-        <p className="text-gray-500 text-center">Loading artworks...</p>
+        <div className="text-center py-4">
+          <p className={`${loadingTextStyles} text-center`}>Loading artworks...</p>
+        </div>
       ) : error ? (
-        <p className="text-red-600 bg-red-50 p-2 rounded text-center">
+        <p className={`${errorTextStyles} bg-red-50 p-2 rounded text-center`}>
           {error}
         </p>
       ) : artworks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className={artworkGridStyles}>
           {artworks.map((artwork) => (
             <div
               key={artwork.id}
-              className="relative overflow-hidden rounded-md shadow-sm bg-gray-100"
+              className={artworkCardStyles}
             >
               {imageErrors[artwork.id] ? (
-                <div className="w-full h-48 flex items-center justify-center bg-gray-200 text-gray-500 text-sm">
+                <div className="w-full h-32 flex items-center justify-center bg-gray-200 text-gray-500 text-xs">
                   Failed to load image
                 </div>
               ) : (
                 <>
                   <img
                     src={artwork.imageUrl}
-                    alt={`Artwork ${artwork.fileName}`}
-                    className="w-full h-48 object-contain z-10 relative"
+                    alt={`Artwork ${artwork.fileName || artwork.id}`}
+                    className={artworkImageStyles}
                     loading="lazy"
                     onError={() => handleImageError(artwork.id)}
-                    onLoad={() => console.log(`Loaded: ${artwork.imageUrl}`)}
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300 flex items-center justify-center z-0">
-                    <p className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {artwork.createdAt
-                        ? new Date(
-                            artwork.createdAt.toDate(),
-                          ).toLocaleDateString()
-                        : "No date"}
-                    </p>
-                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {artwork.createdAt
+                      ? new Date(
+                          artwork.createdAt.toDate(),
+                        ).toLocaleDateString()
+                      : "No date"}
+                  </p>
                 </>
               )}
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center">
+        <p className={noArtworksTextStyles}>
           No artworks found for {studentName || "this student"}.
         </p>
       )}
