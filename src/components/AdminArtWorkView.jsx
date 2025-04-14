@@ -27,13 +27,21 @@ export function AdminArtWorkView() {
       if (!data?.students || data.students.length === 0) {
         try {
           const studentList = await getAllStudents(); // Fetch if not available in context
-          setStudents(studentList || []);
+          // Sort students alphabetically by name
+          const sortedStudents = (studentList || []).sort((a, b) =>
+            a.studentName.localeCompare(b.studentName),
+          );
+          setStudents(sortedStudents);
         } catch (err) {
           setFetchError("Failed to load students list.");
           console.error("Error fetching students:", err);
         }
       } else {
-        setStudents(data.students);
+        // Sort students from context alphabetically by name
+        const sortedStudents = [...data.students].sort((a, b) =>
+          a.studentName.localeCompare(b.studentName),
+        );
+        setStudents(sortedStudents);
       }
     };
     loadStudents();
