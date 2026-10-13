@@ -23,7 +23,7 @@ const NAV_ROWS = [
     className: navButtonStyles,
     items: [
       { label: "Students", path: "students", refresh: ["students"] },
-      { label: "Attendance", path: "attendances", refresh: ["attendances"] },
+      { label: "Attendance", path: "attendances", refresh: [] },
       { label: "View Artworks", path: "view-artworks", refresh: ["students"] },
     ],
   },

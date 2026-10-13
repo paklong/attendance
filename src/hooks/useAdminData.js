@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAllAttendances } from "../services/attendanceService";
 import { getAllParents } from "../services/parentService";
 import { getAllStudents } from "../services/studentService";
 
 const FETCHERS = {
   students: getAllStudents,
   parents: getAllParents,
-  attendances: getAllAttendances,
 };
 const KEYS = Object.keys(FETCHERS);
 

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import EditStudent from "../../components/admin/EditStudent";
+import Alert from "../../components/ui/Alert";
+import { rebuildAttendanceStats } from "../../services/attendanceService";
 import { formatDateTime } from "../../utils/formatDate";
 import { matchesSearch } from "../../utils/search";
 import { sortByStudentName } from "../../utils/sort";
@@ -12,49 +14,57 @@ import {
 } from "../../utils/styles";
 
 const LOW_CLASSES_THRESHOLD = 2;
+const STATS_PENDING = "—";
 
-const buildAttendanceStats = (attendances) => {
-  const stats = new Map();
-  for (const att of attendances) {
-    const entry = stats.get(att.studentId);
-    if (!entry) {
-      stats.set(att.studentId, { total: 1, latest: att.attendanceDate });
-      continue;
-    }
-    entry.total += 1;
-    if (att.attendanceDate?.toMillis() > (entry.latest?.toMillis() ?? 0)) {
-      entry.latest = att.attendanceDate;
-    }
-  }
-  return stats;
+const lastAttendanceLabel = (student) => {
+  if (student.totalAttendances === undefined) return STATS_PENDING;
+  return student.lastAttendanceDate
+    ? formatDateTime(student.lastAttendanceDate)
+    : "No attendance recorded";
 };
 
 export default function StudentsView() {
   const { data, refresh } = useOutletContext();
-  const { students, parents, attendances } = data;
+  const { students, parents } = data;
   const [searchTerm, setSearchTerm] = useState("");
   const [filterIsActive, setFilterIsActive] = useState(true);
+  const [rebuild, setRebuild] = useState({ running: false, error: null });
+
+  const studentsMissingStats = students.filter(
+    (student) => student.totalAttendances === undefined,
+  ).length;
 
   const rows = useMemo(() => {
     const parentNames = new Map(parents.map((p) => [p.id, p.parentName]));
-    const attendanceStats = buildAttendanceStats(attendances);
+    return sortByStudentName(students).map((student) => ({
+      id: student.id,
+      studentName: student.studentName,
+      parentName: parentNames.get(student.parentId) || "N/A",
+      remainingClasses: student.remainingClasses,
+      lastAttendance: lastAttendanceLabel(student),
+      totalAttendances: student.totalAttendances ?? STATS_PENDING,
+      isActive: student.isActive ?? true,
+      lastModifiedTime: formatDateTime(student.lastModifiedTime),
+    }));
+  }, [students, parents]);
 
-    return sortByStudentName(students).map((student) => {
-      const stats = attendanceStats.get(student.id);
-      return {
-        id: student.id,
-        studentName: student.studentName,
-        parentName: parentNames.get(student.parentId) || "N/A",
-        remainingClasses: student.remainingClasses,
-        lastAttendance: stats
-          ? formatDateTime(stats.latest)
-          : "No attendance recorded",
-        totalAttendances: stats?.total ?? 0,
-        isActive: student.isActive ?? true,
-        lastModifiedTime: formatDateTime(student.lastModifiedTime),
-      };
-    });
-  }, [students, parents, attendances]);
+  const handleRebuildStats = async () => {
+    if (
+      !window.confirm(
+        "Recalculate attendance stats for every student? This reads every attendance record once.",
+      )
+    ) {
+      return;
+    }
+    setRebuild({ running: true, error: null });
+    try {
+      await rebuildAttendanceStats();
+      await refresh("students");
+      setRebuild({ running: false, error: null });
+    } catch (error) {
+      setRebuild({ running: false, error: error.message });
+    }
+  };
 
   const visibleRows = useMemo(
     () =>
@@ -69,6 +79,26 @@ export default function StudentsView() {
   return (
     <div className="container mx-auto p-1">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Students</h2>
+
+      {studentsMissingStats > 0 && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 flex flex-wrap items-center justify-between gap-2">
+          <span>
+            {studentsMissingStats} student
+            {studentsMissingStats === 1 ? " is" : "s are"} missing attendance
+            stats, so their Last/Total Attendance columns show{" "}
+            {STATS_PENDING}. Run this once to fill them in.
+          </span>
+          <button
+            type="button"
+            onClick={handleRebuildStats}
+            disabled={rebuild.running}
+            className="px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50"
+          >
+            {rebuild.running ? "Calculating..." : "Calculate attendance stats"}
+          </button>
+        </div>
+      )}
+      <Alert className="mb-4">{rebuild.error}</Alert>
 
       <div className="relative mb-3 w-full max-w-md">
         <input

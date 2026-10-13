@@ -5,6 +5,7 @@ export default function RemoveAttendance({
   attendanceId,
   studentId,
   attendance,
+  attendanceDate,
   onRemove,
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +16,12 @@ export default function RemoveAttendance({
     setIsLoading(true);
     setError(null);
     try {
-      await removeAttendance({ attendanceId, studentId, attendance });
+      await removeAttendance({
+        attendanceId,
+        studentId,
+        attendance,
+        attendanceDate,
+      });
       onRemove(attendanceId);
     } catch (err) {
       setError(err.message);

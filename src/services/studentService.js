@@ -36,6 +36,8 @@ export const createNewStudent = async (
     studentName,
     parentId,
     remainingClasses,
+    totalAttendances: 0,
+    lastAttendanceDate: null,
     lastModifiedTime: serverTimestamp(),
     isActive: true,
   };
