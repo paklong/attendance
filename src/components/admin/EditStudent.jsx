@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { updateStudent } from "../utils/firebase";
+import { useState } from "react";
+import { updateStudent } from "../../services/studentService";
 
 export default function EditStudent({
   studentId,
@@ -9,29 +9,22 @@ export default function EditStudent({
   onUpdate,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    studentName: "",
-    remainingClasses: 0,
-    isActive: true,
-  });
+  const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Update formData when props change or modal opens
-  useEffect(() => {
+  const openModal = () => {
     setFormData({
       studentName: studentName || "",
       remainingClasses: remainingClasses || 0,
       isActive: isActive ?? true,
     });
-  }, [studentName, remainingClasses, isActive, isModalOpen]);
-
-  // Function to open modal
-  const openModal = () => {
+    setError(null);
     setIsModalOpen(true);
   };
 
-  // Handle input changes
+  const closeModal = () => setIsModalOpen(false);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -45,18 +38,15 @@ export default function EditStudent({
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const updatedStudent = await updateStudent(studentId, formData);
+      await updateStudent(studentId, formData);
       setIsModalOpen(false);
-      if (onUpdate) {
-        onUpdate(updatedStudent);
-      }
+      onUpdate?.();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -72,17 +62,27 @@ export default function EditStudent({
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center">
+          <div className="fixed inset-0 backdrop-blur-sm" onClick={closeModal} />
           <div
-            className="fixed inset-0 backdrop-blur-sm"
-            onClick={() => setIsModalOpen(false)} // Optional: Close on background click
-          />
-          <div className="relative bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Edit Student</h2>
+            className="relative bg-white p-6 rounded-lg w-full max-w-md shadow-lg"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`edit-student-${studentId}`}
+          >
+            <h2
+              id={`edit-student-${studentId}`}
+              className="text-xl font-bold mb-4"
+            >
+              Edit Student
+            </h2>
 
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block mb-1">Student Name</label>
+                <label htmlFor={`${studentId}-name`} className="block mb-1">
+                  Student Name
+                </label>
                 <input
+                  id={`${studentId}-name`}
                   type="text"
                   name="studentName"
                   value={formData.studentName}
@@ -93,8 +93,14 @@ export default function EditStudent({
               </div>
 
               <div className="mb-4">
-                <label className="block mb-1">Remaining Classes</label>
+                <label
+                  htmlFor={`${studentId}-remaining`}
+                  className="block mb-1"
+                >
+                  Remaining Classes
+                </label>
                 <input
+                  id={`${studentId}-remaining`}
                   type="number"
                   name="remainingClasses"
                   value={formData.remainingClasses}
@@ -122,7 +128,7 @@ export default function EditStudent({
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                   disabled={loading}
                 >
