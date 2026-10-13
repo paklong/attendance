@@ -1,96 +1,95 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
+import RequireRole from "./components/RequireRole";
+import LoadingState from "./components/ui/LoadingState";
+import AuthProvider from "./context/AuthProvider";
+import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage.jsx";
-import AttendancePage from "./pages/AttendancePage.jsx";
-import PortfolioPage from "./pages/PortfolioPage.jsx";
-import NotFoundPage from "./pages/NotFoundPage.jsx";
-import useAuth from "./utils/useAuth.jsx";
-import CurrentUserContext from "./context/CurrentUserContext.jsx";
-import AdminPage from "./pages/AdminPage.jsx";
-import AdminStudentView from "./components/AdminStudentsView.jsx";
-import AttendanceView from "./components/AdminAttendanceView.jsx";
-import NewParentView from "./components/NewParentView.jsx";
-import NewStudentView from "./components/NewStudentView.jsx";
-import AddAttendanceView from "./components/AddAttendanceView.jsx";
-import AddArtWorkView from "./components/AddArtWorkView.jsx";
-import { AdminArtWorkView } from "./components/AdminArtWorkView.jsx";
+import NotFoundPage from "./pages/NotFoundPage";
 
-function App() {
-  const { currentUser, setCurrentUser, userProfile, loading } = useAuth();
+const AdminPage = lazy(() => import("./pages/admin/AdminPage"));
+const StudentsView = lazy(() => import("./pages/admin/StudentsView"));
+const AttendanceView = lazy(() => import("./pages/admin/AttendanceView"));
+const NewParentView = lazy(() => import("./pages/admin/NewParentView"));
+const NewStudentView = lazy(() => import("./pages/admin/NewStudentView"));
+const AddAttendanceView = lazy(() => import("./pages/admin/AddAttendanceView"));
+const AddArtworksView = lazy(() => import("./pages/admin/AddArtworksView"));
+const ArtworksView = lazy(() => import("./pages/admin/ArtworksView"));
+const HomePage = lazy(() => import("./pages/parent/HomePage"));
+const AttendancePage = lazy(() => import("./pages/parent/AttendancePage"));
+const PortfolioPage = lazy(() => import("./pages/parent/PortfolioPage"));
+
+function AppRoutes() {
+  const { currentUser, isAdmin, loading } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <CurrentUserContext.Provider
-      value={{ currentUser, setCurrentUser, userProfile }}
-    >
-      <BrowserRouter>
-        <Routes>
-          {/* Root redirects to /login */}
-          <Route path="/" element={<Navigate to="/login" />} />
+    <Suspense fallback={<LoadingState />}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* /login: Only show LoginPage if not authenticated */}
+        <Route
+          path="/login"
+          element={
+            currentUser ? (
+              <Navigate to={isAdmin ? "/admin" : "/home"} replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <RequireRole role="admin">
+              <AdminPage />
+            </RequireRole>
+          }
+        >
+          <Route path="students" element={<StudentsView />} />
+          <Route path="attendances" element={<AttendanceView />} />
+          <Route path="new-parent" element={<NewParentView />} />
+          <Route path="new-student" element={<NewStudentView />} />
+          <Route path="add-attendance" element={<AddAttendanceView />} />
+          <Route path="add-artworks" element={<AddArtworksView />} />
+          <Route path="view-artworks" element={<ArtworksView />} />
+        </Route>
+
+        <Route
+          path="/home"
+          element={
+            <RequireRole role="parent">
+              <HomePage />
+            </RequireRole>
+          }
+        >
           <Route
-            path="/login"
-            element={
-              !currentUser ? (
-                <LoginPage />
-              ) : (
-                <Navigate to={currentUser.isAdmin ? "/admin" : "/home"} />
-              )
-            }
+            path="student/:studentName/attendance"
+            element={<AttendancePage />}
           />
-
-          {/* /admin: Only for authenticated admins */}
           <Route
-            path="/admin"
-            element={
-              currentUser && currentUser.isAdmin ? (
-                <AdminPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          >
-            <Route path="students" element={<AdminStudentView />} />
-            <Route path="attendances" element={<AttendanceView />} />
-            <Route path="new-parent" element={<NewParentView />} />
-            <Route path="new-student" element={<NewStudentView />} />
-            <Route path="add-attendance" element={<AddAttendanceView />} />
-            <Route path="add-artworks" element={<AddArtWorkView />} />
-            <Route path="view-artworks" element={<AdminArtWorkView />} />
-          </Route>
+            path="student/:studentName/portfolio"
+            element={<PortfolioPage />}
+          />
+        </Route>
 
-          {/* /home: Only for authenticated non-admins (or all authenticated users if nested routes apply) */}
-          <Route
-            path="/home"
-            element={
-              currentUser && !currentUser.isAdmin ? (
-                <HomePage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          >
-            <Route
-              path="student/:studentName/attendance"
-              element={<AttendancePage />}
-            />
-            <Route
-              path="student/:studentName/portfolio"
-              element={<PortfolioPage />}
-            />
-          </Route>
-
-          {/* Catch-all for undefined routes */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </CurrentUserContext.Provider>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

@@ -1,17 +1,21 @@
-// Format Firestore timestamp to readable date
-const formatDate = (timestamp) => {
+const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat();
+
+// Accepts a Firestore Timestamp (or any { seconds, nanoseconds } object).
+export const formatDateTime = (timestamp) => {
   if (!timestamp || !timestamp.seconds) return "N/A";
-  const date = new Date(
-    timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000,
+  return dateTimeFormatter.format(
+    new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000),
   );
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
 };
 
-export default formatDate;
+export const formatShortDate = (timestamp) =>
+  timestamp ? shortDateFormatter.format(timestamp.toDate()) : "No date";
